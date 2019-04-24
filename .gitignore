@@ -102,3 +102,10 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Ignore Plump QVWs
+OCM_Main_Interface.qvw
+OCM_Main_Interface.txt
+
+# Ignore QlikView logs
+log.txt
