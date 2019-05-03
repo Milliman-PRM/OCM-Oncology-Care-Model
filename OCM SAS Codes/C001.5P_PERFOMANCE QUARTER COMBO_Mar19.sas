@@ -48,7 +48,7 @@ options ls=132 ps=70 obs=max  minoperator ; run ;
 
 RUN ;
 
-%let trueup = 0 ; *** 1 when need to compare true-up file to prior version, else 0 (as in recon processing) *** ;
+%let trueup = 1 ; *** 1 when need to compare true-up file to prior version, else 0 (as in recon processing) *** ;
 ********************************************************************** ;
 *** Qtrs with bene files available for processing *** ;
 %MACRO QTRS ; 
@@ -88,9 +88,9 @@ RUN ;
 	proc sort data=in7.&fn._4 out=file4 ; by bene_id &clm. ;
 	proc sort data=in8.&fn._5 out=file5 ; by bene_id &clm. ;
 	proc sort data=in9.&fn._6 out=file6 ; by bene_id &clm. ;
-	proc sort data=in9.&fn._7 out=file7 ; by bene_id &clm. ;
-	proc sort data=in9.&fn._8 out=file8 ; by bene_id &clm. ;
-	proc sort data=in9.&fn._9 out=file9 ; by bene_id &clm. ;
+	proc sort data=in10.&fn._7 out=file7 ; by bene_id &clm. ;
+	proc sort data=in10.&fn._8 out=file8 ; by bene_id &clm. ;
+	proc sort data=in10.&fn._9 out=file9 ; by bene_id &clm. ;
 	proc sort data=in10.&fn._10 out=file10 ; by bene_id &clm. ;
 
 	DATA STEP1 ;
@@ -1040,18 +1040,18 @@ quit;
 ********************************************************************** ;
 ********************************************************************** ;
 
-%epi(255_50179,0) ; run ;
-%epi(257_50195,0) ; run ;
-%epi(278_50193,0) ; run ;
-%epi(280_50115,0) ; run ;
-%epi(290_50202,0) ; run ;
-%epi(396_50258,0) ; run ;
-%epi(401_50228,0) ; run ; 
-%epi(459_50243,0) ; run ;
-%epi(468_50227,0) ; run ; 
-%epi(480_50185,0) ; run ;
-%epi(523_50330,0) ; run ;
-%epi(137_50136,0) ; run ; 
+%epi(255_50179,1) ; run ;
+%epi(257_50195,1) ; run ;
+%epi(278_50193,1) ; run ;
+%epi(280_50115,1) ; run ;
+%epi(290_50202,1) ; run ;
+%epi(396_50258,1) ; run ;
+%epi(401_50228,1) ; run ; 
+%epi(459_50243,1) ; run ;
+%epi(468_50227,1) ; run ; 
+%epi(480_50185,1) ; run ;
+%epi(523_50330,1) ; run ;
+%epi(137_50136,1) ; run ; 
 
 
 /*
