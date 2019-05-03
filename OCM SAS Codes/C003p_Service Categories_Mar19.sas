@@ -2094,8 +2094,8 @@ DATA READ_FINAL ;
 DATA outfinal.ALL_CLAIMS_&bl._&DS. MEOS_CLAIMS  ;
 	SET /*READ_FINAL OTH_IP*/ ip2 OTHER ;
 	format TaxNum_TIN $32.;
-	if tax_num in (&att_tin.) then TaxNum_TIN = 'Your TIN (' || tax_num || ')';
-	else TaxNum_TIN = 'Other TIN (' || tax_num || ')';
+	if tax_num in (&att_tin.) then TaxNum_TIN = 'Your TIN (' || strip(tax_num) || ')';
+	else TaxNum_TIN = 'Other TIN (' || strip(tax_num) || ')';
 	IF MEOS_PAYMENT = 1 THEN OUTPUT MEOS_CLAIMS ;
 	IF MEOS_PAYMENT NE 1 OR
 	   (MEOS_PAYMENT = 1 AND MEOS_ATT = 1) 
