@@ -14,6 +14,7 @@ libname in6 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Perf
 libname in7 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Performance\FBQ07" ; *** locale of SAS reads. *** ;
 libname in8 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Performance\FBQ08" ; *** locale of SAS reads. *** ;
 libname in9 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Performance\FBQ09" ; *** locale of SAS reads. *** ;
+libname in10 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Performance\FBQ10" ; *** locale of SAS reads. *** ;
 
 libname out "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance" ;
 
@@ -37,7 +38,7 @@ options ls=132 ps=70 obs=max nomprint nomlogic; run ;
 RUN ;
 ********************************************************************** ;
 %let type=p5 ; *** performance period designation *** ; RUN ;
-%let vers=B ; *** indicates A (without epi file) or B (with epi file) processing *** ; RUN ;
+%let vers=A ; *** indicates A (without epi file) or B (with epi file) processing *** ; RUN ;
 %let sd = mdy(7,1,2016) ; *** Performance period start date. ;
 %let fbq01 = mdy(7,1,2016) ; 
 %let fbq02 = mdy(10,1,2016) ; 
@@ -48,13 +49,14 @@ RUN ;
 %let fbq07 = mdy(1,1,2018) ; 
 %let fbq08 = mdy(4,1,2018) ;
 %let fbq09 = mdy(7,1,2018) ;
+%let fbq10 = mdy(10,1,2018) ;
 ********************************************************************** ;
 	*** Attribution File Name Macro Variables *** ;
 ********************************************************************** ;
 
 %let in_att = out.RECON_OVERLAP_PP1_&DSID. out.RECON_OVERLAP_PP2_&DSID. out.RECON_OVERLAP_PP3_&DSID. ;
 
-%let trueup = 0 ; *** 1 when need to compare true-up file to prior version, else 0 (as in recon processing) *** ;
+%let trueup = 1 ; *** 1 when need to compare true-up file to prior version, else 0 (as in recon processing) *** ;
 %let in_drop = OUT.EPI_DROPPED_&VERS._&DSID. ; *** only used in trueup processing *** ;
 RUN ;
 
@@ -820,7 +822,7 @@ proc sort data=triggers_a out=benehaschemo(keep = bene_id  ) nodupkey ; by bene_
 *** Create Mock Beneficiary File *** ;
 proc sort data=OUT.epi_combine_a_&dsid. out=epi_pqtr ; by bene_id ;
 
-proc sort data = out.beneqtrs_&dsid. out=be(keep = bene_id q1 q2 q3 Q4 Q5 q6 q7 q8 q9) ; by bene_id ;
+proc sort data = out.beneqtrs_&dsid. out=be(keep = bene_id q1 q2 q3 Q4 Q5 q6 q7 q8 q9 q10) ; by bene_id ;
 
 data epi_combine ;
 	merge epi_pqtr(in=a) be(in=b) ; by bene_id ;
@@ -976,12 +978,13 @@ data epi_orig_step1 (drop=chemo_flg1);
 
 		else do ;
 			%IF "&VERS." = "A" %THEN %DO ;
-			if q1 = 0 and q2 = 0 and q3 = 0 AND q4 = 0 and q5 = 0  AND Q6 = 0 and Q7 = 0 and Q8 = 0 and Q9 = 1 then EP_BEG = &fbq09.  ;
+			if q1 = 0 and q2 = 0 and q3 = 0 AND q4 = 0 and q5 = 0  AND Q6 = 0 and Q7 = 0 and Q8 = 0 and Q9 = 0 and Q10 = 1 then EP_BEG = &fbq10.  ;
 			%END ;
 			%ELSE %DO ;
-			if q9 = 1 and (DOD = . or DOD gt &fbq09.) then EP_BEG = &fbq09. ;
+			if q10 = 1 and (DOD = . or DOD gt &fbq10.) then EP_BEG = &fbq10. ;
 			%END ;
 
+			else if q9 = 1 and (DOD = . or DOD gt &fbq09.) then EP_BEG = &fbq09. ;
 			else if q8 = 1 and (DOD = . or DOD gt &fbq08.) then EP_BEG = &fbq08. ;
 			else if q7 = 1 and (DOD = . or DOD gt &fbq07.) then EP_BEG = &fbq07. ;
 			else if q6 = 1 and (DOD = . or DOD gt &fbq06.) then EP_BEG = &fbq06. ;
@@ -993,6 +996,7 @@ data epi_orig_step1 (drop=chemo_flg1);
 		end ;
 	END ;
 
+	if ep_beg = . and q10 = 1 and sum(q9,q8,q7,q6,q5,q4,q3,q2,q1) = 0 and dod ne . and dod le &fbq10. then ep_beg = &fbq09. ;
 	if ep_beg = . and q9 = 1 and sum(q8,q7,q6,q5,q4,q3,q2,q1) = 0 and dod ne . and dod le &fbq09. then ep_beg = &fbq08. ;
 	if ep_beg = . and q8 = 1 and sum(q7,q6,q5,q4,q3,q2,q1) = 0 and dod ne . and dod le &fbq08. then ep_beg = &fbq07. ;
 	if ep_beg = . and q7 = 1 and sum(q6,q5,q4,q3,q2,q1) = 0 and dod ne . and dod le &fbq07. then ep_beg = &fbq06. ;
@@ -2044,7 +2048,18 @@ data out.episodes_&type.&vers._&dsid. ;
 	if cancer = "Intestinal Cancer" then cancer = "Small Intestine / Colorectal Cancer" ;
 
 	if a ;
-	if Q9 = 1 AND (ep_end > mdy(7,1,2018) or (q8 = 0 and q7 = 0 and q6 = 0 and q5 = 0 and q4 = 0 and q3=0 and q2=0 and q1=0)) then do ;
+	if Q10 = 1 AND (ep_end > mdy(10,1,2018) or (q9 = 0 and q8 = 0 and q7 = 0 and q6 = 0 and q5 = 0 and q4 = 0 and q3=0 and q2=0 and q1=0)) then do ;
+		CANCER_TYPE = CANCER_TYPEQ10 ;
+		COMMON_CANCER_TYPE = COMMON_CANCER_TYPEQ10+0;
+		RISK_SCORE = risk_score_q10 ;
+		RISK_ADJ_FACTOR = risk_adj_factorq10 ;
+		INFLATION_FACTOR = INFLATION_FACTORQ10 ;
+		HIGH_RISK = HIGH_RISKQ10 ;
+		AGE_CATEGORY = AGE_CATEGORYQ10 ;
+		DIED = DIEDQ10 ;
+		DUAL = DUALQ10 ;
+	end ;
+	else if Q9 = 1 AND (ep_end > mdy(7,1,2018) or (q8 = 0 and q7 = 0 and q6 = 0 and q5 = 0 and q4 = 0 and q3=0 and q2=0 and q1=0)) then do ;
 		CANCER_TYPE = CANCER_TYPEQ09 ;
 		COMMON_CANCER_TYPE = COMMON_CANCER_TYPEQ09+0;
 		RISK_SCORE = risk_score_q09 ;
@@ -2145,6 +2160,10 @@ data out.episodes_&type.&vers._&dsid. ;
 	end ;
 
 	if cancer_type = "  " then do ;
+		CANCER_TYPE = CANCER_TYPEQ10 ;
+		COMMON_CANCER_TYPE = COMMON_CANCER_TYPEQ10+0;
+	end ;
+	if cancer_type = "  " then do ;
 		CANCER_TYPE = CANCER_TYPEQ09 ;
 		COMMON_CANCER_TYPE = COMMON_CANCER_TYPEQ09+0;
 	end ;
@@ -2205,6 +2224,7 @@ data quarters ;
 		in7.epi_&dsid.(in=g) 
 		in8.epi_&dsid.(in=h) 
 		in9.epi_&dsid.(in=i) 
+		in10.epi_&dsid.(in=j) 
 ;
 		q=0 ;
 		if a then q = 1 ;
@@ -2216,6 +2236,7 @@ data quarters ;
 		if g then q = 7 ;
 		if h then q = 8 ;
 		if i then q = 9 ;
+		if j then q = 10 ;
 
 
 proc sort data=quarters ; by bene_id q ;
@@ -2223,7 +2244,7 @@ proc sort data=quarters ; by bene_id q ;
 
 proc sql ;
 	create table epi_q as
-	select A.BENE_ID, a.ep_id, a.ep_beg, a.ep_end, a.q1, a.q2, a.q3, a.q4, a.q5, a.q6, a.q7, a.q8, a.q9,  q, 
+	select A.BENE_ID, a.ep_id, a.ep_beg, a.ep_end, a.q1, a.q2, a.q3, a.q4, a.q5, a.q6, a.q7, a.q8, a.q9, a.q10,  q, 
 			ALL_TOS,INP_ADMSNS,INP_EX,INP_AMB,
 			UNPLANNED_READ,ER_OBS_AD,ER_AD,OBS_AD,ER_AND_OBS_AD,NO_ER_NO_OBS_AD,OBS_STAYS,
 			OBS_ER,OBS_NO_ER,ER_NO_AD_OBS,EM_VISITS,EM_VISITS_ALL,
@@ -2345,7 +2366,17 @@ data epi_q ;
 		if q9 = 1 and q = 9 then ertRig = 1 ;
 		else if q8 = 1 and q = 8 then ertrig = 1 ;
 	end ;
-	
+	*** Episodes beginning in ninth  quarter *** ;
+	*else if ep_beg < mdy(10,1,2018) then do ;
+	else do;
+		if q < 9 then do ;
+			sumi=0 ;
+			maxi = 0 ;
+		end ;
+		*if q10 = 1 and q = 10 then ertRig = 1 ;
+		*else if q9 = 1 and q = 9 then ertrig = 1 ;
+		if q9 = 1 and q = 9 then ertRig = 1 ;
+	end ;
 
 
 proc sort data=EPI_Q ; by bene_id ep_id ;
@@ -2661,9 +2692,10 @@ data out.epi_prelim_&type.&vers._&dsid. ;
 	DATA_COVERAGE = 1 ; *** Indicates full data coverage with demographics available. *** ;
 	*** Indicates Gaps in Data Coverage *** ;
 	%if "&vers." = "A" %then %do ;
-      IF sum(Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8)=0 and Q9=1   													THEN DATA_COVERAGE = 2 ;
+      IF sum(Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,Q9)=0 and Q10=1   													THEN DATA_COVERAGE = 2 ;
     %end ;
 
+	IF SUM(Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,Q9) = 0	and q10=1 AND 			(DOD = . OR DOD > MDY(12,31,2018)) 	THEN DATA_COVERAGE = 3 ;
 	IF SUM(Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8) = 0	and q9=1 AND 			(DOD = . OR DOD > MDY(09,30,2018)) 	THEN DATA_COVERAGE = 3 ;
 	IF SUM(Q1,Q2,Q3,Q4,Q5,Q6,Q7) = 0	and q8=1 AND 			(DOD = . OR DOD > MDY(06,30,2018)) 	THEN DATA_COVERAGE = 3 ;
 	IF SUM(Q1,Q2,Q3,Q4,Q5,Q6) = 0 		and q7=1 AND q8=0 AND 	(DOD = . OR DOD > MDY(03,31,2018)) 	THEN DATA_COVERAGE = 3 ;
