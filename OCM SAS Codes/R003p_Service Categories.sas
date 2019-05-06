@@ -1204,12 +1204,79 @@ DATA EPIPRE(DROP=RECON_ELIG) ;
     IF A ;
 
 proc sql ;
-	create table epipre2 as
+	create table epipre2_pre as
 	select a.*, b.recon_elig
 	from epipre as a left join in&ref..epi&tu._&ds. as b
 	on a.ep_id=b.ep_id ;
 quit ;
 
+
+*****Check for Car-T Claims and override CANCER_TYPE*****;
+data CART_IP_1;
+	set IN&ref..iphdr_&ds.;
+
+	car_t_claim=0;
+	ARRAY d2 (z) ICD_PRCDR_CD1-ICD_PRCDR_CD25 ;
+	DO z = 1 TO dim(d2) ;
+		if d2 in ('XW033C3','XW043C3') then car_t_claim=1;
+	end;
+	if car_t_claim=1;
+	if nopay_cd = " " ;
+	keep ocm_id bene_id ep_id ADMSN_DT;
+run;
+
+PROC SQL ;
+    CREATE TABLE CART_IP_2 AS
+    SELECT B.ocm_id, B.bene_id, B.ep_id
+    FROM EPI_DOD AS A, CART_IP_1 AS B
+    WHERE A.BENE_ID = B.BENE_ID AND
+          A.EP_BEG LE ADMSN_DT LE A.EP_END ;
+QUIT ;
+
+data CART_OP_1;
+	set IN&ref..outrev_&ds.;
+	if hcpcs_cd in ('Q2040','Q2041');
+	if nopay_cd = " " ;
+	keep ocm_id bene_id ep_id clm_id;
+run;
+
+proc sql;
+	create table CART_OP_2 as
+	select a.*, b.from_dt, b.thru_dt
+	from CART_OP_1 as a left join IN&ref..outhdr_&ds. as b
+	on a.bene_id=b.bene_id AND
+		a.clm_id=b.clm_id;
+quit;
+
+PROC SQL ;
+    CREATE TABLE CART_OP_3 AS
+    SELECT A.*, B.*
+    FROM EPI_DOD AS A, CART_OP_2 AS B
+    WHERE A.BENE_ID = B.BENE_ID AND
+          A.EP_ID =  B.EP_ID;
+QUIT ;
+
+data CART_OP_4;
+	set CART_OP_3;
+	if (EP_BEG le FROM_DT AND FROM_DT le EP_END)
+		OR (EP_BEG le THRU_DT AND THRU_DT le EP_END);
+	keep ocm_id bene_id ep_id;
+run;
+
+data CART_1;
+	set CART_IP_2
+		CART_OP_4
+		;
+	CAR_T=1;
+run;
+
+proc sql;
+	create table EPIPRE2 as
+	select a.*, coalesce(b.CAR_T,0) as CAR_T
+	from EPIPRE2_pre as a left join CART_1 as b
+	on a.bene_id=b.bene_id
+		and a.ep_id=b.ep_id;
+quit;
 
 DATA EPIPRE3 MISMATCH_OCM MISMATCH_OCMb ;
     SET EPIPRE2(RENAME = (EP_ID=EP_ID_A)) ;
@@ -1412,6 +1479,8 @@ DATA EPIPRE3 MISMATCH_OCM MISMATCH_OCMb ;
 				CANCER_TYPE = "Breast Cancer - High Risk" ;
 			END ;
 		END ;
+
+		IF CAR_T = 1 then CANCER_TYPE = "CAR-T" ;
 	%end;
 
 	%if &vers. ne R0 %then %do; 
