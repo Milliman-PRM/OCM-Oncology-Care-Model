@@ -10,6 +10,7 @@ libname att3 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Re
 	*** locale of RECONCILIATION  files.  *** ;
 libname rec1 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Reconciliation\PP1" ;
 libname rec2 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Reconciliation\PP2" ;
+libname rec3 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Reconciliation\PP3" ;
 
 
 libname out "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance" ;
@@ -49,7 +50,7 @@ run ;
 
 ********************************************************************** ;
 ********************************************************************** ;
-%let vers = B ; *** indicates A(latest qtr claims only) vs B processing(all qtrs epi files received) *** ;
+%let vers = A ; *** indicates A(latest qtr claims only) vs B processing(all qtrs epi files received) *** ;
 %let bl = p5&vers. ; *** performance period of latest bene file received *** ; 
 ********************************************************************** ;
 	*** Attribution File/Recon File Name Macro Variables *** ;
@@ -69,7 +70,7 @@ RUN ;
 
 *** Note if CMS starts to provide beneficiary data with the early quarterly claims submission,
 	then use of latest_qtr should be removed from derivation of DIED_MILLIMAN. *** ;
-%let latest_qtr = mdy(7,1,2018) ; *** beginning of latest available quarter *** ;
+%let latest_qtr = mdy(10,1,2018) ; *** beginning of latest available quarter *** ;
 %let sd = mdy(7,1,2016) ;
 %let potential = mdy(1,1,2018) ;  *** date of latest episode begin date included in attribution/recon files. *** ;
 
@@ -2188,10 +2189,12 @@ data rec(drop = ep_beg ep_end ep_length recon_elig ) ;
 		REC1.EPIATT&TU1._567_50200_PP1(rename = (ep_id=ep_id_a cancer_type=cancer_type_a )) 
 		REC1.EPIATT&TU1._568_50201_PP1(rename = (ep_id=ep_id_a cancer_type=cancer_type_a )) 
 		REC2.EPIATT&TU2._&ds._PP2(rename = (ep_id=ep_id_a cancer_type=cancer_type_a )) ;
+		REC3.EPIATT&TU3._&ds._PP3(rename = (ep_id=ep_id_a cancer_type=cancer_type_a )) ;
 	%END ;
 	%ELSE %DO ;
 	SET REC1.EPIATT&tu1._&ds._PP1(rename = (ep_id=ep_id_a cancer_type=cancer_type_a ))
 		REC2.EPIATT&tu2._&ds._PP2(rename = (ep_id=ep_id_a cancer_type=cancer_type_a ));
+		REC3.EPIATT&tu3._&ds._PP3(rename = (ep_id=ep_id_a cancer_type=cancer_type_a ));
 	%END ;
 run ;
 
