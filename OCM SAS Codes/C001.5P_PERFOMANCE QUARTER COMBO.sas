@@ -996,7 +996,7 @@ data mbi_bene_&dsid.;
 run;
 
 data mbi_epi_&dsid.;
-	set epi_orig10 (keep=bene_id bene_mbi)
+	set /*epi_orig10 (keep=bene_id bene_mbi)*/
 		epi_orig9 (keep=bene_id bene_mbi)
 		epi_orig8 (keep=bene_id bene_mbi)
 		;
