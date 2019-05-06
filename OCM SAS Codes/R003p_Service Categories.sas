@@ -1268,6 +1268,7 @@ data CART_1;
 		CART_OP_4
 		;
 	CAR_T=1;
+	proc sort nodupkey; by bene_id ep_id;
 run;
 
 proc sql;
