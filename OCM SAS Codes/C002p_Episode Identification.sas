@@ -2048,7 +2048,7 @@ data out.episodes_&type.&vers._&dsid. ;
 	if cancer = "Intestinal Cancer" then cancer = "Small Intestine / Colorectal Cancer" ;
 
 	if a ;
-	if Q10 = 1 AND (ep_end > mdy(10,1,2018) or (q9 = 0 and q8 = 0 and q7 = 0 and q6 = 0 and q5 = 0 and q4 = 0 and q3=0 and q2=0 and q1=0)) then do ;
+	/*if Q10 = 1 AND (ep_end > mdy(10,1,2018) or (q9 = 0 and q8 = 0 and q7 = 0 and q6 = 0 and q5 = 0 and q4 = 0 and q3=0 and q2=0 and q1=0)) then do ;
 		CANCER_TYPE = CANCER_TYPEQ10 ;
 		COMMON_CANCER_TYPE = COMMON_CANCER_TYPEQ10+0;
 		RISK_SCORE = risk_score_q10 ;
@@ -2059,7 +2059,7 @@ data out.episodes_&type.&vers._&dsid. ;
 		DIED = DIEDQ10 ;
 		DUAL = DUALQ10 ;
 	end ;
-	else if Q9 = 1 AND (ep_end > mdy(7,1,2018) or (q8 = 0 and q7 = 0 and q6 = 0 and q5 = 0 and q4 = 0 and q3=0 and q2=0 and q1=0)) then do ;
+	else*/ if Q9 = 1 AND (ep_end > mdy(7,1,2018) or (q8 = 0 and q7 = 0 and q6 = 0 and q5 = 0 and q4 = 0 and q3=0 and q2=0 and q1=0)) then do ;
 		CANCER_TYPE = CANCER_TYPEQ09 ;
 		COMMON_CANCER_TYPE = COMMON_CANCER_TYPEQ09+0;
 		RISK_SCORE = risk_score_q09 ;
@@ -2159,10 +2159,10 @@ data out.episodes_&type.&vers._&dsid. ;
 		DUAL = DUALQ01 ;
 	end ;
 
-	if cancer_type = "  " then do ;
+	/*if cancer_type = "  " then do ;
 		CANCER_TYPE = CANCER_TYPEQ10 ;
 		COMMON_CANCER_TYPE = COMMON_CANCER_TYPEQ10+0;
-	end ;
+	end ;*/
 	if cancer_type = "  " then do ;
 		CANCER_TYPE = CANCER_TYPEQ09 ;
 		COMMON_CANCER_TYPE = COMMON_CANCER_TYPEQ09+0;
@@ -2224,7 +2224,7 @@ data quarters ;
 		in7.epi_&dsid.(in=g) 
 		in8.epi_&dsid.(in=h) 
 		in9.epi_&dsid.(in=i) 
-		in10.epi_&dsid.(in=j) 
+		/*in10.epi_&dsid.(in=j) */
 ;
 		q=0 ;
 		if a then q = 1 ;
@@ -2236,7 +2236,7 @@ data quarters ;
 		if g then q = 7 ;
 		if h then q = 8 ;
 		if i then q = 9 ;
-		if j then q = 10 ;
+		/*if j then q = 10 ; */
 
 
 proc sort data=quarters ; by bene_id q ;
@@ -2244,7 +2244,7 @@ proc sort data=quarters ; by bene_id q ;
 
 proc sql ;
 	create table epi_q as
-	select A.BENE_ID, a.ep_id, a.ep_beg, a.ep_end, a.q1, a.q2, a.q3, a.q4, a.q5, a.q6, a.q7, a.q8, a.q9, a.q10,  q, 
+	select A.BENE_ID, a.ep_id, a.ep_beg, a.ep_end, a.q1, a.q2, a.q3, a.q4, a.q5, a.q6, a.q7, a.q8, a.q9, /*a.q10,  */q, 
 			ALL_TOS,INP_ADMSNS,INP_EX,INP_AMB,
 			UNPLANNED_READ,ER_OBS_AD,ER_AD,OBS_AD,ER_AND_OBS_AD,NO_ER_NO_OBS_AD,OBS_STAYS,
 			OBS_ER,OBS_NO_ER,ER_NO_AD_OBS,EM_VISITS,EM_VISITS_ALL,
