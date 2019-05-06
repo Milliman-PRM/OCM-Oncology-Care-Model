@@ -1514,7 +1514,7 @@ data mismatch_doll ;
 		   EXP_DME_EXCL_DRUGS EXP_DME_EXCL_DRUGS_MILL DIFF_DME_EXCL_DRUGS_MILL 
 		   EXP_PART_B_DRUGS EXP_PART_B_DRUGS_MILL DIFF_PART_B_DRUGS_MILL 
 		   NOVEL_THERAPIES NOVEL_THERAPIES_MILLIMAN  DIFF_NT ;
-
+run;
 
 
 PROC SORT DATA=MISMATCH_DOLL ; BY DESCENDING DIFF_ALL_SERVICES ;
@@ -1533,6 +1533,33 @@ PROC EXPORT DATA=MISMATCH_NT
     OUTFILE = "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Reconciliation\PP&ref.\Recon Reports\recon_check5_&bl._&ds."
     dbms=xlsx replace ;
     quit ;
+
+
+
+data EPIPRE4;
+	set EPIPRE3;
+	if Prior_Changed_Episode = 'Yes';
+	EPI_CHNG=1;
+	keep OCM_ID BENE_ID EPISODE_PERIOD EPI_CHNG;
+	proc sort nodupkey; by OCM_ID BENE_ID EPISODE_PERIOD;
+run;
+
+proc sql;
+	create table EPIPRE5_pre as
+	select a.*, coalesce(EPI_CHNG,0) as EPI_CHNG
+	from EPIPRE3 as a left join EPIPRE4
+	on a.OCM_ID=b.OCM_ID
+		and a.BENE_ID=b.BENE_ID
+		and a.EPISODE_PERIOD=b.EPISODE_PERIOD;
+quit;
+
+data EPIPRE5;
+	set EPIPRE5_pre (rename=(Prior_Changed_Episode=Prior_Changed_Episode_orig));
+	format Prior_Changed_Episode $3.;
+	if EPI_CHNG=1 then Prior_Changed_Episode = 'Yes';
+	else Prior_Changed_Episode = 'No';
+run;
+
 
 data REC&ref..RECON&it._Interface_&bl._&ds.  ;
     retain OCM_ID EPISODE_PERIOD BENE_ID BENE_HICN FIRST_NAME LAST_NAME PATIENT_NAME SEX
@@ -1578,7 +1605,7 @@ data REC&ref..RECON&it._Interface_&bl._&ds.  ;
 ;
 
 
-    SET EPIPRE3 ;
+    SET EPIPRE5 ;
 
     KEEP OCM_ID EPISODE_PERIOD BENE_ID BENE_HICN FIRST_NAME LAST_NAME PATIENT_NAME SEX
            PATIENT_SEX DOB AGE DOD ZIPCODE EP_ID EP_ID_CMS EPI_COUNTER EP_BEG EP_END EP_LENGTH M_EPI_SOURCE_FINAL
