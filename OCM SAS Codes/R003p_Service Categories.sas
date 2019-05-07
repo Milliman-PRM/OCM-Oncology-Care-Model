@@ -1481,7 +1481,7 @@ DATA EPIPRE3 MISMATCH_OCM MISMATCH_OCMb ;
 			END ;
 		END ;
 
-		IF CAR_T = 1 then CANCER_TYPE = "CAR-T" ;
+		IF CAR_T = 1 then CANCER_TYPE_MILLIMAN = "CAR-T" ;
 	%end;
 
 	%if &vers. ne R0 %then %do; 
