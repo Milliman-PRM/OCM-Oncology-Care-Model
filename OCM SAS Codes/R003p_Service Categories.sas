@@ -1605,7 +1605,7 @@ PROC EXPORT DATA=MISMATCH_NT
     quit ;
 
 
-%if &vers. ne R2 %then %do; 
+%if &vers. ne R0 %then %do; 
 	data EPIPRE4;
 		set EPIPRE3;
 		if Prior_Changed_Episode = 'Yes';
