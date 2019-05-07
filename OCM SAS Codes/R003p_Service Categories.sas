@@ -1617,7 +1617,7 @@ run;
 proc sql;
 	create table EPIPRE5_pre as
 	select a.*, coalesce(EPI_CHNG,0) as EPI_CHNG
-	from EPIPRE3 as a left join EPIPRE4
+	from EPIPRE3 as a left join EPIPRE4 as b
 	on a.OCM_ID=b.OCM_ID
 		and a.BENE_ID=b.BENE_ID
 		and a.EPISODE_PERIOD=b.EPISODE_PERIOD;
