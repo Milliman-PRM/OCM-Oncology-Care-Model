@@ -14,7 +14,7 @@ libname rec3 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Reco
 
 
 libname out "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance" ;
-libname outfinal "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance\Mar19" ;
+libname outfinal "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance\May19" ;
 options ls=132 ps=70 obs=MAX nomprint mlogic; run ;
 
 
@@ -238,7 +238,7 @@ DATA ICU(DROP=EP_ID) ;
 	   (REV_CNTR = '0760' AND HCPCS_CD = 'G0378' AND REV_UNIT GE 8) THEN DO ;
 	   IP_OBS = 1 ;
 	END ;
-	
+run;	
 
 PROC SQL ;
 	CREATE TABLE ICU2 AS
@@ -426,6 +426,7 @@ data SC_ip_&bl._&ds. ;
 		IP_PNEU = 0 ; IP_UTI = 0 ; IP_DIABUN = 0 ; IP_ASTHMA = 0 ; IP_LOWER = 0 ; IP_CF = 0 ; IP_CKD = 0 ; 
 		IP_CARDIAC = 0 ; IP_DIALYSIS = 0 ;  IP_DEHY2 = 0 ; IP_RENAL = 0 ; IP_SICKLE = 0 ; IP_IMMUNO = 0 ; 
 		IP_KIDNEY = 0 ; IP_CYSYTIC = 0 ; IP_D= 0 ; IP_LP = 0 ; IP_TRAUMA = 0 ; 
+		car_t = 0;
 
 		ARRAY dv3a (x) ICD_DGNS_VRSN_CD1-ICD_DGNS_VRSN_CD25 ;
 		ARRAY d3a  (x) ICD_DGNS_CD1-ICD_DGNS_CD25 ;
@@ -493,6 +494,7 @@ data SC_ip_&bl._&ds. ;
 						  '0Y6D0Z3','0Y6N0Z4','0Y6F0ZZ','0Y6N0Z5','0Y6G0ZZ','0Y6N0Z6','0Y6H0Z1','0Y6N0Z7','0Y6H0Z2','0Y6N0Z8',
 						  '0Y6H0Z3','0Y6N0Z9','0Y6J0Z1','0Y6N0ZB','0Y6J0Z2','0Y6N0ZC','0Y6J0Z3','0Y6N0ZD','0Y6M0Z0','0Y6N0ZF',
 						  '0Y6M0Z4') THEN IP_LP = 1 ;
+				IF P3 in ('XW033C3','XW043C3') then car_t=1;
 			end ;
 
 		END ;
@@ -923,6 +925,9 @@ data outfinal.SC_op_&bl._&ds. ;
 			*else if sum(obs_pre,er_pre) > 0 then SERVICE_CAT = "Emergency: Non-Chemo Sensitive" ;
 			IF SUM(OBS_PRE, ER_PRE) > 0 THEN SERVICE_CAT = "Emergency Department" ;
 		end ;
+
+	car_t = 0;
+	if hcpcs_cd in ('Q2040','Q2041') then car_t = 1;
 
 
 	if SERVICE_CAT = '' then do ;
@@ -1451,7 +1456,7 @@ data ALL_CLAIMS_&bl._&DS.(drop=ep_beg ep_end DOD) ;
 	IP chemo sensitive. *** ;
 proc sort data=ALL_CLAIMS_&bl._&DS. ; by bene_id ep_id ;
 proc means data=ALL_CLAIMS_&bl._&DS. noprint max ; by bene_id ep_id ;
-	var BC_Hormonal Nonhormonal PROST_CAST PROST_OTH ;
+	var BC_Hormonal Nonhormonal PROST_CAST PROST_OTH car_t;
 	output out=flagmems (drop = _type_ _freq_)
 		   max() = ;
 
@@ -2132,7 +2137,8 @@ proc means data=clms_all  noprint max sum ; by bene_id  EP_ID ;
 		HEMATOPOIETIC_std OTHRX_std RADLAB_std  PROF_std IP_std ER_std
 		OP_std HOSPICE_std SNF_std HH_std 
 		NT_DSTD NT_BSTD STD_PAY MEOS_STD_pay MEOS_STD_PAY_OTH 
-		bc_hormonal nonhormonal READM_COUNT INDEX_COUNT  ;
+		bc_hormonal nonhormonal READM_COUNT INDEX_COUNT  
+		car_t;
 
 	output out=EPI_FLAGS_OP (drop = _type_ _freq_)
 		   max(IPU OPU HSPU HHU SNFU PBU IPOTH IPSCAN IPSNCAN IPMEDCS IPMEDNCS  FAC_ER_CHEMO 
@@ -2144,7 +2150,8 @@ proc means data=clms_all  noprint max sum ; by bene_id  EP_ID ;
 				ANY_HSP_BOTH ANY_HSP_FAC ANY_HSP_HOME ANY_HSP_UNK EX1 IP_ALLCAUSE_30 IP_ICU_30 CHEMO_DEATH14
 				ANYHOSP OP_ALLCAUSE_30 OCM2 HOSP_30DAYS DIED_IN_HOSP IP_CAH
 				ER_WEEKEND CANCER_EM MEOS MEOS_OTH BLAD_LR BLAD_OTH PROST_CAST PROST_OTH 
-				bc_hormonal nonhormonal) =				
+				bc_hormonal nonhormonal
+				car_t) =				
 
 			sum(NT_DALL NT_BALL allowed TOT_RX_CST_AMT INP_ADMSNS_MILLIMAN INP_EXP_MILLIMAN ER_COUNT INP_AMB_MILLIMAN
 				HSP_PMT_AMT FAC_PMT_AMT HOME_PMT_AMT BOTH_PMT_AMT HOSP_DAYS_90 
@@ -2574,6 +2581,7 @@ DATA EPIPRE ;
 				if cancer_type = "Breast Cancer" then cancer_type = "Breast Cancer - High Risk" ;
 			END ;
 		END ;
+
 		IF CANCER_TYPE_MILLIMAN = "Bladder Cancer" THEN DO ; 	
 			IF BLAD_LR = 1 AND BLAD_OTH = 0 THEN DO ;
 				CANCER_TYPE_MILLIMAN = "Bladder Cancer - Low Risk" ;
@@ -2594,6 +2602,11 @@ DATA EPIPRE ;
 				CANCER_TYPE_MILLIMAN = "Prostate Cancer - High Intensity" ;
 				if cancer_TYPE = "Prostate Cancer" then cancer_type = "Prostate Cancer - High Intensity" ;
 			END ;
+		END ;
+
+		IF car_t = 1 then do ;
+			CANCER_TYPE_MILLIMAN = "CAR-T" ;
+			cancer_type = "CAR-T" ;
 		END ;
 	END ;
 
