@@ -2695,7 +2695,7 @@ data out.epi_prelim_&type.&vers._&dsid. ;
       IF sum(Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,Q9)=0 and Q10=1   													THEN DATA_COVERAGE = 2 ;
     %end ;
 
-	IF SUM(Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,Q9) = 0	and q10=1 AND 			(DOD = . OR DOD > MDY(12,31,2018)) 	THEN DATA_COVERAGE = 3 ;
+	/*IF SUM(Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,Q9) = 0	and q10=1 AND 			(DOD = . OR DOD > MDY(12,31,2018)) 	THEN DATA_COVERAGE = 3 ;*/
 	IF SUM(Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8) = 0	and q9=1 AND 			(DOD = . OR DOD > MDY(09,30,2018)) 	THEN DATA_COVERAGE = 3 ;
 	IF SUM(Q1,Q2,Q3,Q4,Q5,Q6,Q7) = 0	and q8=1 AND 			(DOD = . OR DOD > MDY(06,30,2018)) 	THEN DATA_COVERAGE = 3 ;
 	IF SUM(Q1,Q2,Q3,Q4,Q5,Q6) = 0 		and q7=1 AND q8=0 AND 	(DOD = . OR DOD > MDY(03,31,2018)) 	THEN DATA_COVERAGE = 3 ;
