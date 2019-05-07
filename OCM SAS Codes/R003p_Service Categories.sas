@@ -1605,30 +1605,36 @@ PROC EXPORT DATA=MISMATCH_NT
     quit ;
 
 
+%if &vers. ne R2 %then %do; 
+	data EPIPRE4;
+		set EPIPRE3;
+		if Prior_Changed_Episode = 'Yes';
+		EPI_CHNG=1;
+		keep OCM_ID BENE_ID EPISODE_PERIOD EPI_CHNG;
+		proc sort nodupkey; by OCM_ID BENE_ID EPISODE_PERIOD;
+	run;
 
-data EPIPRE4;
-	set EPIPRE3;
-	if Prior_Changed_Episode = 'Yes';
-	EPI_CHNG=1;
-	keep OCM_ID BENE_ID EPISODE_PERIOD EPI_CHNG;
-	proc sort nodupkey; by OCM_ID BENE_ID EPISODE_PERIOD;
-run;
+	proc sql;
+		create table EPIPRE5_pre as
+		select a.*, coalesce(EPI_CHNG,0) as EPI_CHNG
+		from EPIPRE3 as a left join EPIPRE4 as b
+		on a.OCM_ID=b.OCM_ID
+			and a.BENE_ID=b.BENE_ID
+			and a.EPISODE_PERIOD=b.EPISODE_PERIOD;
+	quit;
 
-proc sql;
-	create table EPIPRE5_pre as
-	select a.*, coalesce(EPI_CHNG,0) as EPI_CHNG
-	from EPIPRE3 as a left join EPIPRE4 as b
-	on a.OCM_ID=b.OCM_ID
-		and a.BENE_ID=b.BENE_ID
-		and a.EPISODE_PERIOD=b.EPISODE_PERIOD;
-quit;
-
-data EPIPRE5;
-	set EPIPRE5_pre (rename=(Prior_Changed_Episode=Prior_Changed_Episode_orig));
-	format Prior_Changed_Episode $3.;
-	if EPI_CHNG=1 then Prior_Changed_Episode = 'Yes';
-	else Prior_Changed_Episode = 'No';
-run;
+	data EPIPRE5;
+		set EPIPRE5_pre (rename=(Prior_Changed_Episode=Prior_Changed_Episode_orig));
+		format Prior_Changed_Episode $3.;
+		if EPI_CHNG=1 then Prior_Changed_Episode = 'Yes';
+		else Prior_Changed_Episode = 'No';
+	run;
+%end;
+%else %do;
+	data EPIPRE5;
+		set EPIPRE3;
+	run;
+%end;
 
 
 data REC&ref..RECON&it._Interface_&bl._&ds.  ;
