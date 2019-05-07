@@ -2195,12 +2195,12 @@ data rec(drop = ep_beg ep_end ep_length recon_elig ) ;
 	SET REC1.EPIATT&TU1._&ds._PP1(rename = (ep_id=ep_id_a cancer_type=cancer_type_a )) 
 		REC1.EPIATT&TU1._567_50200_PP1(rename = (ep_id=ep_id_a cancer_type=cancer_type_a )) 
 		REC1.EPIATT&TU1._568_50201_PP1(rename = (ep_id=ep_id_a cancer_type=cancer_type_a )) 
-		REC2.EPIATT&TU2._&ds._PP2(rename = (ep_id=ep_id_a cancer_type=cancer_type_a )) ;
+		REC2.EPIATT&TU2._&ds._PP2(rename = (ep_id=ep_id_a cancer_type=cancer_type_a )) 
 		REC3.EPIATT&TU3._&ds._PP3(rename = (ep_id=ep_id_a cancer_type=cancer_type_a )) ;
 	%END ;
 	%ELSE %DO ;
 	SET REC1.EPIATT&tu1._&ds._PP1(rename = (ep_id=ep_id_a cancer_type=cancer_type_a ))
-		REC2.EPIATT&tu2._&ds._PP2(rename = (ep_id=ep_id_a cancer_type=cancer_type_a ));
+		REC2.EPIATT&tu2._&ds._PP2(rename = (ep_id=ep_id_a cancer_type=cancer_type_a ))
 		REC3.EPIATT&tu3._&ds._PP3(rename = (ep_id=ep_id_a cancer_type=cancer_type_a ));
 	%END ;
 run ;
