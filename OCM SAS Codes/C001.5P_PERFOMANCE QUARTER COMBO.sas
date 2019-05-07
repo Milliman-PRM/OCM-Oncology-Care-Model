@@ -883,7 +883,7 @@ data pde2 ;
 	proc sql ;
 		create table pde1 as
 		select a.* 
-		from in9.pde_&dsid. as a full join pde_chk AS B
+		from in10.pde_&dsid. as a full join pde_chk AS B
 		on a.bene_id=b.bene_id and a.pde_id=b.pde_id
 		WHERE B.pde_ID IS NULL ;
 	quit ;
