@@ -1222,12 +1222,12 @@ data CART_IP_1;
 	end;
 	if car_t_claim=1;
 	if nopay_cd = " " ;
-	keep ocm_id bene_id ep_id ADMSN_DT;
+	keep bene_id ep_id ADMSN_DT;
 run;
 
 PROC SQL ;
     CREATE TABLE CART_IP_2 AS
-    SELECT B.ocm_id, B.bene_id, B.ep_id
+    SELECT B.bene_id, B.ep_id
     FROM EPI_DOD AS A, CART_IP_1 AS B
     WHERE A.BENE_ID = B.BENE_ID AND
           A.EP_BEG LE ADMSN_DT LE A.EP_END ;
@@ -1236,13 +1236,12 @@ QUIT ;
 data CART_OP_1;
 	set IN&ref..outrev_&ds.;
 	if hcpcs_cd in ('Q2040','Q2041');
-	if nopay_cd = " " ;
-	keep ocm_id bene_id ep_id clm_id;
+	keep bene_id ep_id clm_id;
 run;
 
 proc sql;
 	create table CART_OP_2 as
-	select a.*, b.from_dt, b.thru_dt
+	select a.*, b.from_dt, b.thru_dt, b.nopay_cd
 	from CART_OP_1 as a left join IN&ref..outhdr_&ds. as b
 	on a.bene_id=b.bene_id AND
 		a.clm_id=b.clm_id;
@@ -1258,9 +1257,10 @@ QUIT ;
 
 data CART_OP_4;
 	set CART_OP_3;
+	if nopay_cd = " " ;
 	if (EP_BEG le FROM_DT AND FROM_DT le EP_END)
 		OR (EP_BEG le THRU_DT AND THRU_DT le EP_END);
-	keep ocm_id bene_id ep_id;
+	keep bene_id ep_id;
 run;
 
 data CART_1;
