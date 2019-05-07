@@ -13,14 +13,14 @@ libname rec2	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Recon
 libname rec3	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Reconciliation\PP3" ;
 
 libname out "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance" ;
-libname outfinal "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance\Mar19" ;
+libname outfinal "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance\May19" ;
 libname attfin  "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance\Feb19" ;
 libname r2 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Baseline\V3" ;
 
 options ls=132 ps=70 obs=MAX mprint mlogic; run ;
 
 %let bl_1 = blv3 ; *** baseline version, in preparation for multiple versions of these data files *** ; 
-%let vers = B ; *** indicates A(latest qtr claims only) vs B processing(all qtrs epi files received) *** ;
+%let vers = A ; *** indicates A(latest qtr claims only) vs B processing(all qtrs epi files received) *** ;
 %let bl = p5&vers. ; *** performance period of latest bene file received *** ; 
 %let bla = p5A ; *** version of latest attribution file  *** ; 
 
