@@ -29,6 +29,8 @@ libname out "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\80 - QlikView\Qlik_Sasout"
 libname metadat "H:\Nonclient\Medicare Bundled Payment Reference\General\SAS Datasets";
 libname ref "H:\Nonclient\Medicare Bundled Payment Reference\General\SAS Datasets" ;
 libname bench "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\08 - Benchmark Data\BM2 - 5pct Benchmark Files";
+libname MEOS "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\MEOS";
+
 
 **  Premier vs. Other Hospitals **;
 %let other_flag=('396','137');
@@ -1390,8 +1392,6 @@ proc sql;
 quit;
 
 
-%mend episode;
-
 *************************************************************************************************************;
 **************************************** END EPISODE PROCESSING *********************************************;
 *************************************************************************************************************;
@@ -2114,23 +2114,81 @@ quit;
 %mend claims;
 
 *************************************************************************************************************;
+**************************************** MEOS RECOUPMENT JOIN ***********************************************;
+*************************************************************************************************************;
+
+*Testing variables*;
+/*%let report = MEOS;*/
+/*%let ocmid1 = 137;*/
+
+%if &report. = MEOS %then %do;
+
+*set working MEOS claims file*;
+data MEOS1;
+	set out.clm_detail_&report._&set_name._&ocmid1.;
+run;
+
+*subset MEOS contestations to OCM ID*;
+data recoup1;
+	set MEOS.MEOS_summary_w_contestations;
+	if OCM_ID = &ocmid1.;
+run;
+
+*Join MEOS recoupments onto processed MEOS Claims files on Claim ID*;
+proc sql;
+create table recoup2_&ocmid1. as 
+	select a.*, b.* 
+	from MEOS1 as A
+	left join recoup1 as B
+		on A.claim_id = B.ccw_claim_id
+		and A.start_date_use = B.service_date_use
+;
+quit;
+
+*make sure there are no duplicate claims after join*;
+*dupclms table should have 0 obs*;
+proc sort data = recoup2_&ocmid1. nodupkey dupout = dupclms;
+	by claim_id start_date_use;
+run;
+
+*subset MEOS recoupments that do not join onto MEOS claims files*;
+proc sql;
+create table recoup3_&ocmid1. as 
+	select *
+	from recoup1 as A
+	where ccw_claim_id not in (select distinct claim_id from MEOS1);
+quit;
+
+*check that reasons for recoupment that do not join into claims files are reasonable*;
+proc freq data = recoup3_&ocmid1.;
+	tables milliman_comment;
+	title 'Milliman comments';
+run;
+
+*stack claims*;
+data MEOS_claims_recoup_&ocmid1.;
+	set recoup2_&ocmid1. recoup3_&ocmid1.;
+run;
+
+%end;
+*************************************************************************************************************;
 ***************************************** END CLAIMS PROCESSING *********************************************;
 *************************************************************************************************************;
 
 
 *----------- Main interface claims files -----------*;
-%claims(255,50179,'MSMC Oncology LLC', interface);
-%claims(257,50195,'Cancer Center of East Alabama', interface);
-%claims(480,50185,'Peninsula Cancer Institute LLC', interface);
-%claims(396,50258,'GHS DBA University Medical Group', interface);
-%claims(278,50193,'Upstate Oncology Associates', interface);
-%claims(290,50202,'BSHSI St. Francis Medical Center', interface);
-%claims(523,50330,'Memorial Cancer Institute', interface);
-%claims(280,50115,'Warren Clinic Saint Francis Cancer Center', interface);
-%claims(401,50228,'Mountain States Regional Cancer Center', interface);
-%claims(468,50227,'Johnson City Regional Cancer Center', interface);
-%claims(459,50243,'University Hospitals Medical Group', interface);
-%claims(137,50136,'Regional Cancer Care Associates', interface);
+/*%claims(255,50179,'MSMC Oncology LLC', interface);*/
+/*%claims(257,50195,'Cancer Center of East Alabama', interface);*/
+/*%claims(480,50185,'Peninsula Cancer Institute LLC', interface);*/
+/*%claims(396,50258,'GHS DBA University Medical Group', interface);*/
+/*%claims(278,50193,'Upstate Oncology Associates', interface);*/
+/*%claims(290,50202,'BSHSI St. Francis Medical Center', interface);*/
+/*%claims(523,50330,'Memorial Cancer Institute', interface);*/
+/*%claims(280,50115,'Warren Clinic Saint Francis Cancer Center', interface);*/
+/*%claims(401,50228,'Mountain States Regional Cancer Center', interface);*/
+/*%claims(468,50227,'Johnson City Regional Cancer Center', interface);*/
+/*%claims(459,50243,'University Hospitals Medical Group', interface);*/
+/*%claims(137,50136,'Regional Cancer Care Associates', interface);*/
 
 
 /**----------- Emerge claims files -----------*;*/
@@ -2203,6 +2261,14 @@ run;
 data  out.util_filter_&report.;
 	set	out.util_filter_&report._&set_name:
 		out.util_filter_&report._&set_name_base:;
+run;
+
+%end;
+
+%if &report. = MEOS %then %do;
+
+data out.MEOS_claims_recoup;
+	set MEOS_claims_recoup_:;
 run;
 
 %end;
