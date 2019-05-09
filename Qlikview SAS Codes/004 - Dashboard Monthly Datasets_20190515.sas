@@ -7,12 +7,12 @@ options ls=132 ps=70 obs=max mprint mlogic; run ;
 
 %include "H:\_HealthLibrary\SAS\000 - General SAS Macros.sas";
 *Turn on for baseline CLAIMS data;
-%let label = base; 
-libname in "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Baseline\V3" ;
+/*%let label = base; */
+/*libname in "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Baseline\V3" ;*/
 
 *Turn on for performance CLAIMS data and ALL EPISODE RUN;
-/*%let label = performance;*/
-/*libname in "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance\Mar19";*/
+%let label = performance;
+libname in "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance\Mar19";
 
 libname inrec "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\80 - QlikView\Qlik_Sasout";
 
@@ -1398,18 +1398,18 @@ quit;
 *************************************************************************************************************;
 
 *----------- ALL files -----------*;
-/*%episode(255,50179,'MSMC Oncology LLC');*/
-/*%episode(257,50195,'Cancer Center of East Alabama');*/
-/*%episode(480,50185,'Peninsula Cancer Institute LLC');*/
-/*%episode(396,50258,'GHS DBA University Medical Group');*/
-/*%episode(278,50193,'Upstate Oncology Associates');*/
-/*%episode(290,50202,'BSHSI St. Francis Medical Center');*/
-/*%episode(523,50330,'Memorial Cancer Institute');*/
-/*%episode(280,50115,'Warren Clinic Saint Francis Cancer Center');*/
-/*%episode(401,50228,'Mountain States Regional Cancer Center');*/
-/*%episode(468,50227,'Johnson City Regional Cancer Center');*/
-/*%episode(459,50243,'University Hospitals Medical Group');*/
-/*%episode(137,50136,'Regional Cancer Care Associates');*/
+%episode(255,50179,'MSMC Oncology LLC');
+%episode(257,50195,'Cancer Center of East Alabama');
+%episode(480,50185,'Peninsula Cancer Institute LLC');
+%episode(396,50258,'GHS DBA University Medical Group');
+%episode(278,50193,'Upstate Oncology Associates');
+%episode(290,50202,'BSHSI St. Francis Medical Center');
+%episode(523,50330,'Memorial Cancer Institute');
+%episode(280,50115,'Warren Clinic Saint Francis Cancer Center');
+%episode(401,50228,'Mountain States Regional Cancer Center');
+%episode(468,50227,'Johnson City Regional Cancer Center');
+%episode(459,50243,'University Hospitals Medical Group');
+%episode(137,50136,'Regional Cancer Care Associates');
 
 
 *************************************************************************************************************;
@@ -2112,7 +2112,6 @@ quit;
 
 %end;
 
-%mend claims;
 
 *************************************************************************************************************;
 **************************************** MEOS RECOUPMENT JOIN ***********************************************;
@@ -2172,6 +2171,9 @@ data MEOS_claims_recoup_&ocmid1.;
 run;
 
 %end;
+
+%mend claims;
+
 *************************************************************************************************************;
 ***************************************** END CLAIMS PROCESSING *********************************************;
 *************************************************************************************************************;
@@ -2207,18 +2209,18 @@ run;
 /*%claims(137,50136,'Regional Cancer Care Associates', emerge);*/
 /**/
 /**----------- MEOS claims files -----------*;*/
-/*%claims(255,50179,'MSMC Oncology LLC', MEOS);*/
-/*%claims(257,50195,'Cancer Center of East Alabama', MEOS);*/
-/*%claims(480,50185,'Peninsula Cancer Institute LLC', MEOS);*/
-/*%claims(396,50258,'GHS DBA University Medical Group', MEOS);*/
-/*%claims(278,50193,'Upstate Oncology Associates', MEOS);*/
-/*%claims(290,50202,'BSHSI St. Francis Medical Center', MEOS);*/
-/*%claims(523,50330,'Memorial Cancer Institute', MEOS);*/
-/*%claims(280,50115,'Warren Clinic Saint Francis Cancer Center', MEOS);*/
-/*%claims(401,50228,'Mountain States Regional Cancer Center', MEOS);*/
-/*%claims(468,50227,'Johnson City Regional Cancer Center', MEOS);*/
-/*%claims(459,50243,'University Hospitals Medical Group', MEOS);*/
-/*%claims(137,50136,'Regional Cancer Care Associates', MEOS);*/
+%claims(255,50179,'MSMC Oncology LLC', MEOS);
+%claims(257,50195,'Cancer Center of East Alabama', MEOS);
+%claims(480,50185,'Peninsula Cancer Institute LLC', MEOS);
+%claims(396,50258,'GHS DBA University Medical Group', MEOS);
+%claims(278,50193,'Upstate Oncology Associates', MEOS);
+%claims(290,50202,'BSHSI St. Francis Medical Center', MEOS);
+%claims(523,50330,'Memorial Cancer Institute', MEOS);
+%claims(280,50115,'Warren Clinic Saint Francis Cancer Center', MEOS);
+%claims(401,50228,'Mountain States Regional Cancer Center', MEOS);
+%claims(468,50227,'Johnson City Regional Cancer Center', MEOS);
+%claims(459,50243,'University Hospitals Medical Group', MEOS);
+%claims(137,50136,'Regional Cancer Care Associates', MEOS);
 
 
 
@@ -2229,10 +2231,10 @@ run;
 
 
 **	Stack all datasets and output	**;
-/*data out.episode_detail_combined;*/
-/*	length OCM_NAME $255;*/
-/*	set out.epi_detail_combined_&set_name: (drop=ep_id EPI_TIN_MATCH);*/
-/*run;*/
+data out.episode_detail_combined;
+	length OCM_NAME $255;
+	set out.epi_detail_combined_&set_name: (drop=ep_id EPI_TIN_MATCH);
+run;
 
 %macro claimsoutput(report,report2,report3);
 
@@ -2268,7 +2270,7 @@ run;
 
 %if &report. = MEOS %then %do;
 
-data out.MEOS_claims_recoup;
+data out.claims_detail_MEOSrecoup;
 	set MEOS_claims_recoup_:;
 run;
 
@@ -2278,8 +2280,8 @@ run;
 
 
 *Claims Output*;
-/*%claimsoutput(interface, interf_em, emerge);*/
-/*%claimsoutput(MEOS,MEOS,MEOS);*/
+%claimsoutput(interface, interf_em, emerge);
+%claimsoutput(MEOS,MEOS,MEOS);
 
 
 **Demo Output**;
@@ -2510,12 +2512,13 @@ data out.claims_detail_MEOS_demo;
 run;
 
 
-***SPLIT INTO PREMIER AND NON-PREMIER***;
+***SPLIT INTO PREMIER AND NON-PREMIER CLIENTS***;
 
 %MACRO SPLIT(file, claimfile);
 
 data out.&file.&claimfile._pmr
-	 out.&file.&claimfile._other;
+	 out.&file.&claimfile._rcc
+	 out.&file.&claimfile._ghs;
 	 %if &file. = episode_detail %then %do;
 		 set out.episode_detail_combined;
 	 %end;
@@ -2524,14 +2527,15 @@ data out.&file.&claimfile._pmr
 	 %end;
 
 	 if OCM_ID not in &other_flag. then output out.&file.&claimfile._pmr;
-	 else output out.&file.&claimfile._other;
-
+	 else if OCM_ID in '137' then output out.&file.&claimfile._rcc;
+	 else if OCM_ID in '396' then output out.&file.&claimfile._ghs;
 run;
 
 %MEND SPLIT;
 
 /*%SPLIT(episode_detail,);*/
 /*%SPLIT(claims_detail,_interf_em);*/
+/*%SPLIT(claims_detail,_MEOSrecoup);*/
 /*%SPLIT(claims_detail,_MEOS);*/
 
 %MACRO SPLIT2(file, outfile, claimfile);
@@ -2559,11 +2563,14 @@ data out.&file.&claimfile._pmr;
 			out.&outfile._interface_&set_name_base._459	;
 run;
 
-data out.&file.&claimfile._other;
-	set 	out.&outfile._interface_&set_name._396
-			out.&outfile._interface_&set_name_base._396
-			out.&outfile._interface_&set_name._137
+data out.&file.&claimfile._rcc;
+	set 	out.&outfile._interface_&set_name._137
 			out.&outfile._interface_&set_name_base._137	;
+run;
+
+data out.&file.&claimfile._ghs;
+	set 	out.&outfile._interface_&set_name._396
+			out.&outfile._interface_&set_name_base._396 ;
 run;
 
 %MEND SPLIT2;
@@ -2572,12 +2579,19 @@ run;
 /*%SPLIT2(util_filter, util_filter, _interface);*/
 
 /***MAIN**;*/
-/***Milliman**;*/
-/*%sas_2_csv(out.episode_detail_other,episode_detail_combined_other.csv);*/
-/*%sas_2_csv(out.claims_detail_interf_em_other,claims_detail_interf_em_other.csv);*/
-/*%sas_2_csv(out.claims_detail_MEOS_other,claims_detail_MEOS_other.csv);*/
-/*%sas_2_csv(out.patient_journey_interface_other,patient_journey_interface_other.csv);*/
-/*%sas_2_csv(out.util_filter_interface_other,util_filter_interface_other.csv);*/
+/***RCC**;*/
+/*%sas_2_csv(out.episode_detail_rcc,episode_detail_combined_rcc.csv);*/
+/*%sas_2_csv(out.claims_detail_interf_em_rcc,claims_detail_interf_em_rcc.csv);*/
+/*%sas_2_csv(out.claims_detail_MEOS_rcc,claims_detail_MEOS_rcc.csv);*/
+/*%sas_2_csv(out.patient_journey_interface_rcc,patient_journey_interface_rcc.csv);*/
+/*%sas_2_csv(out.util_filter_interface_rcc,util_filter_interface_rcc.csv);*/
+/**/
+/***GHS**;*/
+/*%sas_2_csv(out.episode_detail_ghs,episode_detail_combined_ghs.csv);*/
+/*%sas_2_csv(out.claims_detail_interf_em_ghs,claims_detail_interf_em_ghs.csv);*/
+/*%sas_2_csv(out.claims_detail_MEOS_ghs,claims_detail_MEOS_ghs.csv);*/
+/*%sas_2_csv(out.patient_journey_interface_ghs,patient_journey_interface_ghs.csv);*/
+/*%sas_2_csv(out.util_filter_interface_ghs,util_filter_interface_ghs.csv);*/
 /**/
 /***Premier**;*/
 /*%sas_2_csv(out.episode_detail_pmr,episode_detail_combined_premier.csv);*/
@@ -2587,11 +2601,11 @@ run;
 /*%sas_2_csv(out.util_filter_interface_pmr,util_filter_interface_premier.csv);*/
 /**/
 /***Combined**;*/
-/*%sas_2_csv(out.episode_detail_combined,episode_detail_combined.csv);*/
-/*%sas_2_csv(out.claims_detail_interf_em,claims_detail_interf_em.csv);*/
-/*%sas_2_csv(out.claims_detail_MEOS,claims_detail_MEOS.csv);*/
-/*%sas_2_csv(out.patient_journey_interface,patient_journey_interface.csv);*/
-/*%sas_2_csv(out.util_filter_interface,util_filter_interface.csv);*/
+%sas_2_csv(out.episode_detail_combined,episode_detail_combined.csv);
+%sas_2_csv(out.claims_detail_interf_em,claims_detail_interf_em.csv);
+%sas_2_csv(out.claims_detail_MEOSrecoup,claims_detail_MEOSrecoup.csv);
+%sas_2_csv(out.patient_journey_interface,patient_journey_interface.csv);
+%sas_2_csv(out.util_filter_interface,util_filter_interface.csv);
 /**/
 /***DEMO**;*/
 /***Save demo files**;*/
