@@ -12,11 +12,11 @@ options ls=132 ps=70 obs=max mprint mlogic; run ;
 
 *Turn on for performance CLAIMS data and ALL EPISODE RUN;
 %let label = performance;
-libname in "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance\Mar19";
+libname in "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance\May19";
 
 libname inrec "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\80 - QlikView\Qlik_Sasout";
 
-%let set_name = p5b; *'a' is the designation when we don't yet have the most recent beneficiary file, else 'b';
+%let set_name = p5a; *'a' is the designation when we don't yet have the most recent beneficiary file, else 'b';
 %let set_name_base = blv3;
 /*%let ocmid1 = 523;*/
 /*%let ocmid2 = 50203;*/
@@ -2160,10 +2160,10 @@ create table recoup3_&ocmid1. as
 quit;
 
 *check that reasons for recoupment that do not join into claims files are reasonable*;
-proc freq data = recoup3_&ocmid1.;
-	tables milliman_comment;
-	title 'Milliman comments';
-run;
+/*proc freq data = recoup3_&ocmid1.;*/
+/*	tables milliman_comment;*/
+/*	title 'Milliman comments';*/
+/*run;*/
 
 *stack claims*;
 data MEOS_claims_recoup_&ocmid1.;
