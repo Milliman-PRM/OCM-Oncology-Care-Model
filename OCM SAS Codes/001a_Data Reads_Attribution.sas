@@ -7,27 +7,33 @@
 	 (3) Format date fields to be 03/14/14 - DOB, Episode Beginning Date, Episode Ending Date, Most Recent E&M.
 	 (4) Save file as tab delimited text file with same file name as original Excel . *** ;
 
-%let indir1 =R:\data\HIPAA\OCM_Oncology_Care_Model_PP\03 - Reconciliation Data\Attribution_PP1_TrueUp2 ;
-%let outdir = "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP1" ;
+%let indir1 =R:\data\HIPAA\OCM_Oncology_Care_Model_PP\03 - Reconciliation Data\Attribution_PP4 ;
+%let outdir = "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP4" ;
 libname r2 &outdir. ;
 
 options ls=132 ps=70 obs =max;
 
 ********************************************************************** ;
 ********************************************************************** ;
-%let cdate1 = 20181107;  *** date in file names *** ;
-
+%let cdate1 = 20190503;  *** date in file names *** ;
+/*
+***No Longer Needed
 %let pp = 1 ;
 %let version = TrueUp2 ;
-
+*/
 /*
 %let pp = 2 ;
-%let version = TrueUp1 ;
+%let version = TrueUp2 ;
 */
 /*
 %let pp = 3 ;
-%let version = Initial ;
+%let version = TrueUp1 ;
 */
+
+%let pp = 4 ;
+%let version = Initial ;
+
+
 ********************************************************************** ;
 ********************************************************************** ;
 
@@ -76,9 +82,9 @@ TITLE "&DSID." ; RUN ;
 %reads(468_50227,468) ; run ;
 %reads(480_50185,480) ; run ;
 %reads(523_50330,523) ; run ;
-
+/*
 ***OCMs 567 and 568 are only ran for PP1***;
 %reads(567_50200,567) ; run ;
 %reads(568_50201,568) ; run ;
-
+*/
 
