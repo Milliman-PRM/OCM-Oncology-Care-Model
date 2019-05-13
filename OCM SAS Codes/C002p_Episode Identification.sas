@@ -54,9 +54,9 @@ RUN ;
 	*** Attribution File Name Macro Variables *** ;
 ********************************************************************** ;
 
-%let in_att = out.RECON_OVERLAP_PP1_&DSID. out.RECON_OVERLAP_PP2_&DSID. out.RECON_OVERLAP_PP3_&DSID. ;
+%let in_att = out.RECON_OVERLAP_PP1_&DSID. out.RECON_OVERLAP_PP2_&DSID. out.RECON_OVERLAP_PP3_&DSID. out.RECON_OVERLAP_PP4_&DSID. ;
 
-%let trueup = 0 ; *** 1 when need to compare true-up file to prior version, else 0 (as in recon processing) *** ;
+%let trueup = 1 ; *** 1 when need to compare true-up file to prior version, else 0 (as in recon processing) *** ;
 %let in_drop = OUT.EPI_DROPPED_&VERS._&DSID. ; *** only used in trueup processing *** ;
 RUN ;
 
@@ -869,6 +869,12 @@ data recon_overlap_pp3_epi;
 	if b;
 run;
 
+data recon_overlap_pp4_epi;
+	MERGE EPI_COMBINE(IN=A) OUT.RECON_OVERLAP_PP4_&dsid.(IN=B);
+	by BENE_ID ;
+	if b;
+run;
+
 **********;
 
 **** Pulls triggers for reconciliation overlap episodes. **** ;
@@ -888,27 +894,32 @@ DATA ES3 REMAIN3 recon_pp3_nomatch ;
 	IF A AND B THEN OUTPUT ES3 ;
 	else if a=0 and b then output recon_pp3_nomatch;
 	ELSE OUTPUT REMAIN3 ;
+DATA ES4 REMAIN4 recon_pp4_nomatch ;
+	MERGE REMAIN3(IN=A) recon_overlap_pp4_epi (IN=B) ; BY BENE_ID EP_beg_A ;
+	IF A AND B THEN OUTPUT ES4 ;
+	else if a=0 and b then output recon_pp4_nomatch;
+	ELSE OUTPUT REMAIN4 ;
 RUN;
 
 **********;
 	
 **** Pulls performance episode information for non-recon episodes . **** ;
 
-DATA PRE_STEP1 REMAIN4;
+DATA PRE_STEP1 REMAIN5;
 	MERGE EPI_COMBINE(IN=A)
 		  %if "&trueup." = "1" %then %do ; 
 			dropped( keep = bene_id bene_hicn first_name last_name sex dob cancer_type_a )
 		  %end ;
-		  REMAIN3(IN=B keep = bene_id episode_end chemo_in_pp epi_seq ecount attribute_flag
+		  REMAIN4(IN=B keep = bene_id episode_end chemo_in_pp epi_seq ecount attribute_flag
 		   				      m_episode_beg m_epi_claim m_epi_source) ; BY BENE_ID ;
 		IF A AND B THEN OUTPUT PRE_STEP1 ;
-		IF A=0 AND B THEN OUTPUT REMAIN4 ;
+		IF A=0 AND B THEN OUTPUT REMAIN5 ;
 
 **********;
 
 DATA PRE_STEP2 ;
-	MERGE EPI_COMBINE(IN=A) PRE_STEP1(IN=B) ES1(IN=C) ES2(IN=D) ES3(IN=E); BY BENE_ID ;
-	IF A AND B=0 AND C=0 AND D=0 AND E=0 ;
+	MERGE EPI_COMBINE(IN=A) PRE_STEP1(IN=B) ES1(IN=C) ES2(IN=D) ES3(IN=E) ES4(IN=F); BY BENE_ID ;
+	IF A AND B=0 AND C=0 AND D=0 AND E=0 AND F=0 ;
 
 
 DATA PRE_STEP3 ;
@@ -939,9 +950,16 @@ DATA recon_pp3_nomatch2 ;
 	if a;
 run;
 
+DATA recon_pp4_nomatch2 ;
+	MERGE recon_pp4_nomatch(IN=A) benehaschemo(IN=B) ; BY BENE_ID ;
+	any_chemo=0;
+	if b then any_chemo=1;
+	if a;
+run;
+
 
 DATA epi_orig_step1_pre ;
-	SET ES1(IN=A) ES2(IN=A) ES3(IN=A) PRE_STEP1(IN=A) PRE_STEP3(IN=B) recon_pp1_nomatch2(IN=C) recon_pp2_nomatch2(IN=C) recon_pp3_nomatch2(IN=C) ;
+	SET ES1(IN=A) ES2(IN=A) ES3(IN=A) ES4(IN=A) PRE_STEP1(IN=A) PRE_STEP3(IN=B) recon_pp1_nomatch2(IN=C) recon_pp2_nomatch2(IN=C) recon_pp3_nomatch2(IN=C) recon_pp4_nomatch2(IN=C) ;
 	format chemo_flg1 $1.;
 	if a then chemo_flg1 = 'a';
 	else if b then chemo_flg1 = 'b';
