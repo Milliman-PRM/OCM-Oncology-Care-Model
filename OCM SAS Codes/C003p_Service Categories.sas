@@ -2553,6 +2553,8 @@ DATA EPIPRE ;
 		else if ep_beg>mdy(3,31,2017) and ep_beg < mdy(7,2,2017) and  q4 = 0 and q5=0 and attribute_flag notin ("0","D") then perform_not_match = 1 ;
 		else if ep_beg>mdy(6,30,2017) and ep_beg < mdy(10,2,2017) and  q5 = 0 and q6=0 and attribute_flag notin ("0","D") then perform_not_match = 1 ;
 		else if ep_beg>mdy(9,30,2017) and ep_beg < mdy(1,2,2018) and  q6 = 0 and q7=0 and attribute_flag notin ("0","D") then perform_not_match = 1 ;
+		else if ep_beg>mdy(12,31,2017) and ep_beg < mdy(4,2,2018) and  q7 = 0 and q8=0 and attribute_flag notin ("0","D") then perform_not_match = 1 ;
+		else if ep_beg>mdy(3,31,2018) and ep_beg < mdy(7,2,2018) and  q8 = 0 and q9=0 and attribute_flag notin ("0","D") then perform_not_match = 1 ;
 
 		*** 2. Potentially Attributable Episodes  *** ;
 	if ep_beg gt &potential. and attribute_flag = "0" then attribute_flag = "4" ;
