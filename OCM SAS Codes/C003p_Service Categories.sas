@@ -6,6 +6,7 @@
 libname att 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP1" ; 
 libname att2 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP2" ;
 libname att3 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP3" ;
+libname att4 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP4" ;
 
 	*** locale of RECONCILIATION  files.  *** ;
 libname rec1 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Reconciliation\PP1" ;
@@ -59,11 +60,14 @@ run ;
 %let version1 = TrueUp2 ;
 %let tu1 = 1 ; *** blank for initial, 1 for true-up 1, 2 for true-up 2 *** ;
 %let pp2 = 2 ;
-%let version2 = TrueUp1 ;
+%let version2 = TrueUp2 ;
 %let tu2 =  ; *** blank for initial, 1 for true-up 1, 2 for true-up 2 *** ;
 %let pp3 = 3 ;
-%let version3 = initial ;
+%let version3 = TrueUp1 ;
 %let tu3 =  ; *** blank for initial, 1 for true-up 1, 2 for true-up 2 *** ;
+%let pp4 = 4 ;
+%let version4 = initial ;
+%let tu4 =  ; *** blank for initial, 1 for true-up 1, 2 for true-up 2 *** ;
 ********************************************************************** ;
 ********************************************************************** ;
 RUN ;
@@ -74,7 +78,7 @@ RUN ;
 %let sd = mdy(7,1,2016) ;
 %let potential = mdy(1,1,2018) ;  *** date of latest episode begin date included in attribution/recon files. *** ;
 
-%LET USE_ATT = 0 ; *** 1 = Attribution Page Update.  0 = Recon Page Update. *** ;
+%LET USE_ATT = 1 ; *** 1 = Attribution Page Update.  0 = Recon Page Update. *** ;
 
 run ;
 
@@ -3370,66 +3374,77 @@ RUN;
 **************************************************************************** ;
 **************************************************************************** ;
 
-%LET ATT = att.ATT_PP&pp1.&version1._255_50179 att2.ATT_PP&pp2.&version2._255_50179 att3.ATT_PP&pp3.&version3._255_50179 ;
+%LET ATT = att.ATT_PP&pp1.&version1._255_50179 att2.ATT_PP&pp2.&version2._255_50179 
+			att3.ATT_PP&pp3.&version3._255_50179 att4.ATT_PP&pp4.&version4._255_50179 ;
 %let att_tin = '454999975' ; run ;
 %SC(255_50179,255) ; run ;
-*%att(255_50179,255) ;run ; 
+%att(255_50179,255) ;run ; 
 
-%LET ATT = att.ATT_PP&pp1.&version1._257_50195 att2.ATT_PP&pp2.&version2._257_50195 att3.ATT_PP&pp3.&version3._257_50195 ;
+%LET ATT = att.ATT_PP&pp1.&version1._257_50195 att2.ATT_PP&pp2.&version2._257_50195 
+			att3.ATT_PP&pp3.&version3._257_50195 att4.ATT_PP&pp4.&version4._257_50195 ;
 %let att_tin = '636000526' ;run ;
 %SC(257_50195,257) ; run ;
-*%att(257_50195,257) ; run ;
+%att(257_50195,257) ; run ;
 
-%LET ATT = att.ATT_PP&pp1.&version1._278_50193 att2.ATT_PP&pp2.&version2._278_50193 att3.ATT_PP&pp3.&version3._278_50193 ;
+%LET ATT = att.ATT_PP&pp1.&version1._278_50193 att2.ATT_PP&pp2.&version2._278_50193 
+			att3.ATT_PP&pp3.&version3._278_50193 att4.ATT_PP&pp4.&version4._278_50193 ;
 %let att_tin = '134290167' ;run ;
 %SC(278_50193,278) ; run ;
-*%att(278_50193,278) ; run ;
+%att(278_50193,278) ; run ;
 
-%LET ATT = att.ATT_PP&pp1.&version1._280_50115 att2.ATT_PP&pp2.&version2._280_50115 att3.ATT_PP&pp3.&version3._280_50115 ;
+%LET ATT = att.ATT_PP&pp1.&version1._280_50115 att2.ATT_PP&pp2.&version2._280_50115 
+			att3.ATT_PP&pp3.&version3._280_50115 att4.ATT_PP&pp4.&version4._280_50115 ;
 %let att_tin = '731310891' ;run ;
 %SC(280_50115,280) ; run ; 
-*%att(280_50115,280) ; run ; 
+%att(280_50115,280) ; run ; 
 
 %LET ATT = att.ATT_PP&pp1.&version1._290_50202 att.ATT_PP&pp1.&version1._567_50200 att.ATT_PP&pp1.&version1._568_50201
-		   att2.ATT_PP&pp2.&version2._290_50202 att3.ATT_PP&pp3.&version3._290_50202;
+		   att2.ATT_PP&pp2.&version2._290_50202 att3.ATT_PP&pp3.&version3._290_50202 att4.ATT_PP&pp4.&version4._290_50202 ;
 %let att_tin = '540647482','540793767','541744931','311716973' ;run ;
 %SC(290_50202,290) ; run ;
-*%att(290_50202,290) ; run ;
+%att(290_50202,290) ; run ;
 
-%LET ATT = att.ATT_PP&pp1.&version1._396_50258 att2.ATT_PP&pp2.&version2._396_50258 att3.ATT_PP&pp3.&version3._396_50258 ;
+%LET ATT = att.ATT_PP&pp1.&version1._396_50258 att2.ATT_PP&pp2.&version2._396_50258 
+			att3.ATT_PP&pp3.&version3._396_50258 att4.ATT_PP&pp4.&version4._396_50258 ;
 %let att_tin = '571004971' ;run ;
 %SC(396_50258,396) ; run ;
-*%att(396_50258,396) ; run ;
+%att(396_50258,396) ; run ;
 
-%LET ATT = att.ATT_PP&pp1.&version1._401_50228 att2.ATT_PP&pp2.&version2._401_50228 att3.ATT_PP&pp3.&version3._401_50228 ;
+%LET ATT = att.ATT_PP&pp1.&version1._401_50228 att2.ATT_PP&pp2.&version2._401_50228 
+			att3.ATT_PP&pp3.&version3._401_50228 att4.ATT_PP&pp4.&version4._401_50228 ;
 %let att_tin = '205485346' ;run ;
 %SC(401_50228,401) ; run ;
-*%att(401_50228,401) ; run ; 
+%att(401_50228,401) ; run ; 
 
-%LET ATT = att.ATT_PP&pp1.&version1._459_50243 att2.ATT_PP&pp2.&version2._459_50243 att3.ATT_PP&pp3.&version3._459_50243 ;
+%LET ATT = att.ATT_PP&pp1.&version1._459_50243 att2.ATT_PP&pp2.&version2._459_50243 
+			att3.ATT_PP&pp3.&version3._459_50243 att4.ATT_PP&pp4.&version4._459_50243 ;
 %let att_tin = '204881619' ;run ;
 %SC(459_50243,459) ; run ;
-*%att(459_50243,459) ; run ;
+%att(459_50243,459) ; run ;
 
-%LET ATT = att.ATT_PP&pp1.&version1._468_50227 att2.ATT_PP&pp2.&version2._468_50227 att3.ATT_PP&pp3.&version3._468_50227 ;
+%LET ATT = att.ATT_PP&pp1.&version1._468_50227 att2.ATT_PP&pp2.&version2._468_50227 
+			att3.ATT_PP&pp3.&version3._468_50227 att4.ATT_PP&pp4.&version4._468_50227 ;
 %let att_tin = '621490616' ;run ;
 %SC(468_50227,468) ; run ;  
-*%att(468_50227,468) ; run ; 
+%att(468_50227,468) ; run ; 
 
-%LET ATT = att.ATT_PP&pp1.&version1._480_50185 att2.ATT_PP&pp2.&version2._480_50185 att3.ATT_PP&pp3.&version3._480_50185 ;
+%LET ATT = att.ATT_PP&pp1.&version1._480_50185 att2.ATT_PP&pp2.&version2._480_50185 
+			att3.ATT_PP&pp3.&version3._480_50185 att4.ATT_PP&pp4.&version4._480_50185 ;
 %let att_tin = '201872200' ;run ;
 %SC(480_50185,480) ; run ;
-*%att(480_50185,480) ; run ;
+%att(480_50185,480) ; run ;
 
-%LET ATT = att.ATT_PP&pp1.&version1._523_50330 att2.ATT_PP&pp2.&version2._523_50330 att3.ATT_PP&pp3.&version3._523_50330 ;
+%LET ATT = att.ATT_PP&pp1.&version1._523_50330 att2.ATT_PP&pp2.&version2._523_50330 
+			att3.ATT_PP&pp3.&version3._523_50330 att4.ATT_PP&pp4.&version4._523_50330 ;
 %let att_tin = '596014973' ;run ;
 %SC(523_50330,523) ; run ;
-*%att(523_50330,523) ; run ;
+%att(523_50330,523) ; run ;
 
-%LET ATT = att.ATT_PP&pp1.&version1._137_50136 att2.ATT_PP&pp2.&version2._137_50136 att3.ATT_PP&pp3.&version3._137_50136 ; 
+%LET ATT = att.ATT_PP&pp1.&version1._137_50136 att2.ATT_PP&pp2.&version2._137_50136 
+			att3.ATT_PP&pp3.&version3._137_50136 att4.ATT_PP&pp4.&version4._137_50136 ; 
 %let att_tin = '223141761' ;run ;
 %SC(137_50136,137) ; run ; 
-*%att(137_50136,137) ;run ;
+%att(137_50136,137) ;run ;
 
 %MACRO CHECK_PP(ds,id)  ;
 
