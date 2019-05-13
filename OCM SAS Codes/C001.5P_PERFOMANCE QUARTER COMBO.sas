@@ -17,6 +17,7 @@ libname in10 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Per
 libname att1 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP1" ; 
 libname att2 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP2" ;
 libname att3 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP3" ;
+libname att4 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP4" ;
 
 	*** locale of RECONCILIATION  files.  *** ;
 libname rec1 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Reconciliation\PP1" ;
@@ -39,16 +40,20 @@ options ls=132 ps=70 obs=max  minoperator ; run ;
 %let tu1 = 2 ; *** blank for initial, 1 for true-up 1, 2 for true-up 2 *** ;
 
 %let pp2 = 2 ;
-%let version2 = TrueUp1 ;
+%let version2 = TrueUp2 ;
 %let tu2 = 1 ; *** blank for initial, 1 for true-up 1, 2 for true-up 2 *** ;
 
 %let pp3 = 3 ;
-%let version3 = Initial ;
+%let version3 = TrueUp1 ;
 %let tu3 =  ; *** blank for initial, 1 for true-up 1, 2 for true-up 2 *** ;
+
+%let pp4 = 4 ;
+%let version4 = Initial ;
+%let tu4 =  ; *** blank for initial, 1 for true-up 1, 2 for true-up 2 *** ;
 
 RUN ;
 
-%let trueup = 0 ; *** 1 when need to compare true-up file to prior version, else 0 (as in recon processing) *** ;
+%let trueup = 1 ; *** 1 when need to compare true-up file to prior version, else 0 (as in recon processing) *** ;
 ********************************************************************** ;
 *** Qtrs with bene files available for processing *** ;
 %MACRO QTRS ; 
@@ -493,6 +498,7 @@ DATA recon ;
 	%END ;
 		att2.ATT_pp&pp2.&version2._&dsid.(in=b) 
 		att3.ATT_pp&pp3.&version3._&dsid.(in=c) 
+		att4.ATT_pp&pp4.&version4._&dsid.(in=d) 
 		;
 
 	if cancer_type_A in ('C47','C49') then cancer_type_A = 'C47 or C49';
@@ -531,6 +537,7 @@ DATA recon ;
 	IF A THEN RECON_PP = 1 ;
 	IF B THEN RECON_PP = 2 ;
 	IF C THEN RECON_PP = 3 ;
+	IF D THEN RECON_PP = 4 ;
 
 	ATT_HICN = BENE_HICN ;
 
@@ -643,7 +650,7 @@ DATA RECON ;
 
 DATA OUT.REC_TU_FLAGS_&DSID.(KEEP = BENE_ID BENE_HICN EP_ID IN_RECON ATT_CANC_MATCH_CMS RECON_PP ATT_EPI_PERD_MATCH_CMS);
 	SET RECON ;
-	IF RECON_PP in (1,2,3) THEN DO ;
+	IF RECON_PP in (1,2,3,4) THEN DO ;
 		IN_RECON = 1 ;
 		IF NEW_ATT = 1 THEN IN_RECON = 2 ; *** New attributed bene/episode to practice  *** ;
 		IF OL_CHECK=1 THEN IN_RECON = 3 ; *** Bene in prior and current attribution, under different episodes  *** ;
@@ -668,7 +675,7 @@ DATA OUT.REC_TU_FLAGS_&DSID.(KEEP = BENE_ID BENE_HICN EP_ID IN_RECON ATT_CANC_MA
 PROC SORT DATA=RECON ; BY BENE_ID ;
 *** Note to programmer - there will need to be a separate RECON_OVERLAP for each PP reconciliation file 
 	as a beneficiary will have multiple episodes as we add performance periods.  **** ;
-DATA out.RECON_OVERLAP_PP1_&DSID. RECON_OVERLAP_PP2_&DSID. RECON_OVERLAP_PP3_&DSID.
+DATA out.RECON_OVERLAP_PP1_&DSID. RECON_OVERLAP_PP2_&DSID. RECON_OVERLAP_PP3_&DSID. RECON_OVERLAP_PP4_&DSID.
 	 RECON_ALONE  RECON_OVERLAP ;
 	 MERGE RECON(IN=A WHERE=(MISS_BENEID NE 1)) 
 		   BENES (IN=B DROP=DOB) ; BY BENE_ID ;
@@ -743,6 +750,7 @@ DATA out.RECON_OVERLAP_PP1_&DSID. RECON_OVERLAP_PP2_&DSID. RECON_OVERLAP_PP3_&DS
 	IF RECON_PP = 1 THEN OUTPUT out.RECON_OVERLAP_PP1_&DSID.  ;
 	IF RECON_PP = 2 THEN OUTPUT RECON_OVERLAP_PP2_&DSID.  ;
 	IF RECON_PP = 3 THEN OUTPUT RECON_OVERLAP_PP3_&DSID.  ;
+	IF RECON_PP = 4 THEN OUTPUT RECON_OVERLAP_PP4_&DSID.  ;
 RUN;
 
 proc sql;
@@ -769,12 +777,26 @@ DATA out.RECON_OVERLAP_PP3_&DSID. (DROP=BENE_HICN_FIX) ;
 	IF BENE_HICN = '' THEN BENE_HICN = BENE_HICN_FIX ;
 RUN;
 
+proc sql;
+	create table RECON_OVERLAP_PP4_FIX as
+	select a.*, coalesce(b.bene_hicn,'') as BENE_HICN_FIX
+	from RECON_OVERLAP_PP4_&DSID. as a left join benes as b
+	on a.bene_id=b.bene_id;
+QUIT;
+
+DATA out.RECON_OVERLAP_PP4_&DSID. (DROP=BENE_HICN_FIX) ;
+	set RECON_OVERLAP_PP4_FIX ;
+	IF BENE_HICN = '' THEN BENE_HICN = BENE_HICN_FIX ;
+RUN;
+
+
 PROC SORT DATA=EPI_COMBINE ; BY BENE_ID  ;
 
 DATA RECON_BENES ;
 	SET OUT.RECON_OVERLAP_PP1_&DSID. (KEEP=BENE_ID BENE_HICN ) 
 		OUT.RECON_OVERLAP_PP2_&DSID. (KEEP=BENE_ID BENE_HICN ) 
-		OUT.RECON_OVERLAP_PP3_&DSID. (KEEP=BENE_ID BENE_HICN ) ;
+		OUT.RECON_OVERLAP_PP3_&DSID. (KEEP=BENE_ID BENE_HICN ) 
+		OUT.RECON_OVERLAP_PP4_&DSID. (KEEP=BENE_ID BENE_HICN ) ;
 PROC SORT DATA=RECON_BENES NODUPKEY ; BY BENE_ID ; 
 RUN;
 
@@ -1016,6 +1038,7 @@ data mbi_att_&dsid.;
 	%END ;
 	ATT2.ATT_PP&pp2.&version2._&dsid. (keep=bene_id mbi)
 	ATT3.ATT_PP&pp3.&version3._&dsid. (keep=bene_id mbi)
+	ATT4.ATT_PP&pp4.&version4._&dsid. (keep=bene_id mbi)
 	;
 
 	if mbi ^= '';
@@ -1040,18 +1063,18 @@ quit;
 ********************************************************************** ;
 ********************************************************************** ;
 
-%epi(255_50179,0) ; run ;
-%epi(257_50195,0) ; run ;
-%epi(278_50193,0) ; run ;
-%epi(280_50115,0) ; run ;
-%epi(290_50202,0) ; run ;
-%epi(396_50258,0) ; run ;
-%epi(401_50228,0) ; run ; 
-%epi(459_50243,0) ; run ;
-%epi(468_50227,0) ; run ; 
-%epi(480_50185,0) ; run ;
-%epi(523_50330,0) ; run ;
-%epi(137_50136,0) ; run ; 
+%epi(255_50179,1) ; run ;
+%epi(257_50195,1) ; run ;
+%epi(278_50193,1) ; run ;
+%epi(280_50115,1) ; run ;
+%epi(290_50202,1) ; run ;
+%epi(396_50258,1) ; run ;
+%epi(401_50228,1) ; run ; 
+%epi(459_50243,1) ; run ;
+%epi(468_50227,1) ; run ; 
+%epi(480_50185,1) ; run ;
+%epi(523_50330,1) ; run ;
+%epi(137_50136,1) ; run ; 
 
 
 /*
