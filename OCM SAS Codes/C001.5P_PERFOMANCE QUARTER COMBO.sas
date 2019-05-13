@@ -17,6 +17,7 @@ libname in10 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Per
 libname att1 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP1" ; 
 libname att2 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP2" ;
 libname att3 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP3" ;
+libname att4 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP4" ;
 
 	*** locale of RECONCILIATION  files.  *** ;
 libname rec1 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Reconciliation\PP1" ;
@@ -39,16 +40,20 @@ options ls=132 ps=70 obs=max  minoperator ; run ;
 %let tu1 = 2 ; *** blank for initial, 1 for true-up 1, 2 for true-up 2 *** ;
 
 %let pp2 = 2 ;
-%let version2 = TrueUp1 ;
+%let version2 = TrueUp2 ;
 %let tu2 = 1 ; *** blank for initial, 1 for true-up 1, 2 for true-up 2 *** ;
 
 %let pp3 = 3 ;
-%let version3 = Initial ;
+%let version3 = TrueUp1 ;
 %let tu3 =  ; *** blank for initial, 1 for true-up 1, 2 for true-up 2 *** ;
+
+%let pp4 = 4 ;
+%let version4 = Initial ;
+%let tu4 =  ; *** blank for initial, 1 for true-up 1, 2 for true-up 2 *** ;
 
 RUN ;
 
-%let trueup = 0 ; *** 1 when need to compare true-up file to prior version, else 0 (as in recon processing) *** ;
+%let trueup = 1 ; *** 1 when need to compare true-up file to prior version, else 0 (as in recon processing) *** ;
 ********************************************************************** ;
 *** Qtrs with bene files available for processing *** ;
 %MACRO QTRS ; 
@@ -365,6 +370,7 @@ DATA ATT_TU ;
 	%END ;
 		ATT2.ATT_PP&pp2.&version2._&dsid. (in=b) 
 		ATT3.ATT_PP&pp3.&version3._&dsid. (in=c)
+		ATT4.ATT_PP&pp4.&version4._&dsid. (in=d)
 		;
 
 	if cancer_type_A in ('C47','C49') then cancer_type_A = 'C47 or C49';
@@ -372,6 +378,7 @@ DATA ATT_TU ;
 	IF A THEN RECON_PP = 1 ;
 	IF B THEN RECON_PP = 2 ;
 	IF C THEN RECON_PP = 3 ;
+	IF D THEN RECON_PP = 4 ;
 
 	IF SEX = "F" THEN SEX = "2" ;
 	ELSE SEX = "1" ;
@@ -493,6 +500,7 @@ DATA recon ;
 	%END ;
 		att2.ATT_pp&pp2.&version2._&dsid.(in=b) 
 		att3.ATT_pp&pp3.&version3._&dsid.(in=c) 
+		att4.ATT_pp&pp4.&version4._&dsid.(in=d) 
 		;
 
 	if cancer_type_A in ('C47','C49') then cancer_type_A = 'C47 or C49';
@@ -870,6 +878,7 @@ data rec ;
 	%end;
     att2.pde&tu2._&dsid.
     att3.pde&tu3._&dsid.
+    att4.pde&tu4._&dsid.
 	;
 run ;
 
@@ -906,6 +915,7 @@ data rec;
 	%end ;
 	att2.&infile.&tu2._&dsid. 	
 	att3.&infile.&tu3._&dsid. 	
+	att4.&infile.&tu4._&dsid. 	
 	;
 run ;
 
@@ -961,6 +971,7 @@ data rec1;
 	%end ;
 	att2.&infile.&tu2._&dsid. 	
 	att3.&infile.&tu3._&dsid. 	
+	att4.&infile.&tu4._&dsid. 	
 	;
 run ;
 
@@ -1016,6 +1027,7 @@ data mbi_att_&dsid.;
 	%END ;
 	ATT2.ATT_PP&pp2.&version2._&dsid. (keep=bene_id mbi)
 	ATT3.ATT_PP&pp3.&version3._&dsid. (keep=bene_id mbi)
+	ATT4.ATT_PP&pp4.&version4._&dsid. (keep=bene_id mbi)
 	;
 
 	if mbi ^= '';
@@ -1040,18 +1052,18 @@ quit;
 ********************************************************************** ;
 ********************************************************************** ;
 
-%epi(255_50179,0) ; run ;
-%epi(257_50195,0) ; run ;
-%epi(278_50193,0) ; run ;
-%epi(280_50115,0) ; run ;
-%epi(290_50202,0) ; run ;
-%epi(396_50258,0) ; run ;
-%epi(401_50228,0) ; run ; 
-%epi(459_50243,0) ; run ;
-%epi(468_50227,0) ; run ; 
-%epi(480_50185,0) ; run ;
-%epi(523_50330,0) ; run ;
-%epi(137_50136,0) ; run ; 
+%epi(255_50179,1) ; run ;
+%epi(257_50195,1) ; run ;
+%epi(278_50193,1) ; run ;
+%epi(280_50115,1) ; run ;
+%epi(290_50202,1) ; run ;
+%epi(396_50258,1) ; run ;
+%epi(401_50228,1) ; run ; 
+%epi(459_50243,1) ; run ;
+%epi(468_50227,1) ; run ; 
+%epi(480_50185,1) ; run ;
+%epi(523_50330,1) ; run ;
+%epi(137_50136,1) ; run ; 
 
 
 /*
