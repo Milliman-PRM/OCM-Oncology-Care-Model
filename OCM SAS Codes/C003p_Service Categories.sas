@@ -76,7 +76,7 @@ RUN ;
 	then use of latest_qtr should be removed from derivation of DIED_MILLIMAN. *** ;
 %let latest_qtr = mdy(10,1,2018) ; *** beginning of latest available quarter *** ;
 %let sd = mdy(7,1,2016) ;
-%let potential = mdy(1,1,2018) ;  *** date of latest episode begin date included in attribution/recon files. *** ;
+%let potential = mdy(7,1,2018) ;  *** date of latest episode begin date included in attribution/recon files. *** ;
 
 %LET USE_ATT = 1 ; *** 1 = Attribution Page Update.  0 = Recon Page Update. *** ;
 
@@ -2181,8 +2181,8 @@ run ;
 
 DATA PULL_RECON NOT ;
 	SET out.epi_prelim_&bl._&ds. ;
-	IF RECON_PP NOT IN (1,2) AND ATTRIBUTE_FLAG NE "D" THEN IN_RECON = . ;
-	if recon_pp not in (1,2) then do ;
+	IF RECON_PP NOT IN (1,2,3) AND ATTRIBUTE_FLAG NE "D" THEN IN_RECON = . ;
+	if recon_pp not in (1,2,3) then do ;
 		ATT_CANC_MATCH_CMS = . ; ATT_EPI_PERD_MATCH_CMS = . ;
 	end ;
 	IF IN_RECON IN (4,1) AND ATT_CANC_MATCH_CMS NE 1 AND ATT_EPI_PERD_MATCH_CMS NE 1 THEN OUTPUT PULL_RECON ;
@@ -2551,6 +2551,8 @@ DATA EPIPRE ;
 		else if ep_beg>mdy(9,30,2016) and ep_beg < mdy(1,2,2017) and  q2 = 0 and q3=0 and attribute_flag notin ("0","D") then perform_not_match = 1 ;
         else if ep_beg>mdy(12,31,2016) and ep_beg < mdy(4,2,2017) and  q3 = 0 and q4=0 and attribute_flag notin ("0","D") then perform_not_match = 1 ;
 		else if ep_beg>mdy(3,31,2017) and ep_beg < mdy(7,2,2017) and  q4 = 0 and q5=0 and attribute_flag notin ("0","D") then perform_not_match = 1 ;
+		else if ep_beg>mdy(6,30,2017) and ep_beg < mdy(10,2,2017) and  q5 = 0 and q6=0 and attribute_flag notin ("0","D") then perform_not_match = 1 ;
+		else if ep_beg>mdy(9,30,2017) and ep_beg < mdy(1,2,2018) and  q6 = 0 and q7=0 and attribute_flag notin ("0","D") then perform_not_match = 1 ;
 
 		*** 2. Potentially Attributable Episodes  *** ;
 	if ep_beg gt &potential. and attribute_flag = "0" then attribute_flag = "4" ;
@@ -3310,7 +3312,7 @@ DATA ATT3 ;
 	LENGTH IN_PERFORMANCE_DATA EPI_START_DATE_MATCH PERFORMANCE_PER_MATCH CANCER_MATCH TIN_MATCH $5. ;
 	FORMAT IN_PERFORMANCE_DATA EPI_START_DATE_MATCH PERFORMANCE_PER_MATCH CANCER_MATCH TIN_MATCH $5. ;
 
-	if recon_pp = 3 then do ;
+	if recon_pp = 4 then do ;
 		in_recon = . ; ATT_CANC_MATCH_CMS = . ; ATT_EPI_PERD_MATCH_CMS = . ;
 	end ;
 
