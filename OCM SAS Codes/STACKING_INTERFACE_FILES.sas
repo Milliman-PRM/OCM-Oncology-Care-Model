@@ -6,6 +6,7 @@
 libname att 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP1" ; 
 libname att2 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP2" ;
 libname att3 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP3" ;
+libname att4 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP4" ;
 
 	*** locale of RECONCILIATION  files.  *** ;
 libname rec1 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Reconciliation\PP1" ;
@@ -26,16 +27,18 @@ options ls=132 ps=70 obs=MAX mprint mlogic; run ;
 
 %let Rvers1 = R2 ; *** R = Reconciliation, 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
 %let it1 = 2 ;  *** 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
-%let Rvers2 = R1 ; *** R = Reconciliation, 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
+%let Rvers2 = R2 ; *** R = Reconciliation, 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
 %let it2 = 1 ;  *** 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
-%let Rvers3 = R0 ; *** R = Reconciliation, 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
+%let Rvers3 = R1 ; *** R = Reconciliation, 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
 %let it3 = 0 ;  *** 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
+%let Rvers4 = R0 ; *** R = Reconciliation, 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
+%let it4 = 0 ;  *** 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
 
 %let Rbl1 = p1&Rvers1. ; *** performance period 1, bene file received *** ;
 %let Rbl2 = p2&Rvers2. ; *** performance period 2, bene file received *** ;
 %let Rbl3 = p3&Rvers3. ; *** performance period 3, bene file received *** ;
 
-%let att_avail = 0 ; ***1 when attribution is most recent, 0 when reconciliation most recent *** ;
+%let att_avail = 1 ; ***1 when attribution is most recent, 0 when reconciliation most recent *** ;
 
 %let no_bene = mdy(7,1,2018) ; *** First day with no bene file (Only applicable when vers=A)*** ;
 
