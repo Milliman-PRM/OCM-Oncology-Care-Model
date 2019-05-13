@@ -56,7 +56,7 @@ RUN ;
 
 %let in_att = out.RECON_OVERLAP_PP1_&DSID. out.RECON_OVERLAP_PP2_&DSID. out.RECON_OVERLAP_PP3_&DSID. ;
 
-%let trueup = 0 ; *** 1 when need to compare true-up file to prior version, else 0 (as in recon processing) *** ;
+%let trueup = 1 ; *** 1 when need to compare true-up file to prior version, else 0 (as in recon processing) *** ;
 %let in_drop = OUT.EPI_DROPPED_&VERS._&DSID. ; *** only used in trueup processing *** ;
 RUN ;
 
