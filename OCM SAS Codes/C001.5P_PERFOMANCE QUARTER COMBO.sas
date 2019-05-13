@@ -878,7 +878,6 @@ data rec ;
 	%end;
     att2.pde&tu2._&dsid.
     att3.pde&tu3._&dsid.
-    att4.pde&tu4._&dsid.
 	;
 run ;
 
@@ -915,7 +914,6 @@ data rec;
 	%end ;
 	att2.&infile.&tu2._&dsid. 	
 	att3.&infile.&tu3._&dsid. 	
-	att4.&infile.&tu4._&dsid. 	
 	;
 run ;
 
@@ -971,7 +969,6 @@ data rec1;
 	%end ;
 	att2.&infile.&tu2._&dsid. 	
 	att3.&infile.&tu3._&dsid. 	
-	att4.&infile.&tu4._&dsid. 	
 	;
 run ;
 
