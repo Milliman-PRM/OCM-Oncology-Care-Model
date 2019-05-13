@@ -27,9 +27,9 @@ options ls=132 ps=70 obs=MAX mprint mlogic; run ;
 
 %let Rvers1 = R2 ; *** R = Reconciliation, 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
 %let it1 = 2 ;  *** 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
-%let Rvers2 = R2 ; *** R = Reconciliation, 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
+%let Rvers2 = R1 ; *** R = Reconciliation, 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
 %let it2 = 1 ;  *** 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
-%let Rvers3 = R1 ; *** R = Reconciliation, 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
+%let Rvers3 = R0 ; *** R = Reconciliation, 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
 %let it3 = 0 ;  *** 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
 %let Rvers4 = R0 ; *** R = Reconciliation, 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
 %let it4 = 0 ;  *** 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
