@@ -289,10 +289,10 @@ data MEOS_flags;
 run;
 
 ********TESTING VARIABLES********;
-/*%let OCM_ID = 278;*/
-/*%let OCM_ID2 = 50193;*/
-/*%let PP = 'PP3';*/
-/*%let OCM_tin = '134290167' ;*/
+%let OCM_ID = 137;
+%let OCM_ID2 = 50136;
+%let PP = 'PP2';
+%let OCM_tin = '223141761' ;
 *********************************;
 
 %MACRO MEOS(OCM_ID, OCM_ID2, PP, PPvar);
@@ -607,6 +607,23 @@ quit;
 data cm_bene;
 	set MEOS_subset;
 	if MEOS_CM_dup = 1;
+
+	CM2016_claim = 0;
+	CM2017_claim = 0;
+	CM2018_claim = 0;
+
+	if service_date_use >= mdy(7,1,2016) then do;
+		if put(Procedure_Code, $CM2016_.) = 'Y' then CM2016_claim = 1;
+	end;
+	if service_date_use >= mdy(1,1,2017) then do;
+		if put(Procedure_Code, $CM2017_.) = 'Y' then CM2017_claim = 1;
+	end;
+	if service_date_use >= mdy(1,1,2018) then do;
+		if put(Procedure_Code, $CM2018_.) = 'Y' then CM2018_claim = 1;
+	end;
+
+	cm_claim = max(CM2016_claim,CM2017_claim,CM2018_claim);
+	if cm_claim = 1;
 run;
 
 proc sql;
@@ -715,7 +732,28 @@ proc sql;
 ;
 quit;
 
+*flag any remaining CM claims that we do not observe if they overlap with a valid MEOS claim we observe*;
+proc sql;
+	create table MEOS_CM_overlap_0 as
+		select a.*, 1 as MEOS_CM_overlap_milliman
+		from cm_bene as A
+		inner join MEOS_claims as B
+			on a.CCW_Beneficiary_ID = b.BENE_ID
+			and trim(a.TIN) = trim(b.TAX_NUM)
+			and month(a.service_date_use) = month(b.start_date_use)
+;
+quit;
 
+proc sql;
+	create table MEOS_CM_overlap as
+	select a.*, b.MEOS_CM_overlap_milliman
+	from MEOS_subset as A
+	left join MEOS_CM_overlap_0 as B
+		on a.CCW_Beneficiary_ID = b.CCW_Beneficiary_ID
+		and a.CCW_Claim_ID = b.CCW_Claim_ID
+	where A.PERF_PERIOD = &PP.
+;
+quit;
 ******************************* RECOUPMENT REASON #4 *********************************;
 *identify MEOS payments during that were paid during a hospice stay *;
 data hospice_claims;
@@ -823,12 +861,14 @@ proc sql;
 			, h.MEOS_after_death_milliman
 			, i.MEOS_CM_dup_milliman
 			, j.MEOS_CM_valid_milliman
+			, k.MEOS_CM_overlap_milliman
 			,max(b.no_episode_milliman, b.no_chemo_milliman,
 				 b.no_cancer_diag_milliman, b.no_qual_chemo_milliman,
 				 b.no_EM_milliman, c.no_EM_milliman, c.not_attributed_milliman,
 				 c.tiebreak_tin_milliman, c.fewer_EM_milliman, 
 				 d.dup_payment_milliman, e.MEOS_hospice_milliman,
-				 f.MEOS_90day_milliman, g.MEOS_6plus_milliman, h.MEOS_after_death_milliman, i.MEOS_CM_dup_milliman) as milliman_reason_flag
+				 f.MEOS_90day_milliman, g.MEOS_6plus_milliman, h.MEOS_after_death_milliman,
+				 i.MEOS_CM_dup_milliman, k.MEOS_CM_overlap_milliman) 		as milliman_reason_flag
 			from MEOS_subset as A
 				left join noepisode_flags as B
 					on a.CCW_Beneficiary_ID = b.CCW_Beneficiary_ID
@@ -857,6 +897,9 @@ proc sql;
 				left join MEOS_CM_valid as J
 					on a.CCW_Beneficiary_ID = J.CCW_Beneficiary_ID
 					and a.CCW_Claim_ID = j.CCW_Claim_ID
+				left join MEOS_CM_overlap as K
+					on a.CCW_Beneficiary_ID = K.CCW_Beneficiary_ID
+					and a.CCW_Claim_ID = K.CCW_Claim_ID
 ;
 quit;
 
@@ -890,7 +933,7 @@ data MEOS_summary_&OCM_ID._&PPvar.;
 		else MEOS_6plus_agree = 0;
 	if MEOS_after_death = 1 and MEOS_after_death = MEOS_after_death_milliman then MEOS_after_death_agree = 1;
 		else MEOS_after_death_agree = 0;
-	if MEOS_CM_dup = 1 and MEOS_CM_dup = MEOS_CM_dup_milliman then MEOS_CM_dup_agree = 1;
+	if MEOS_CM_dup = 1 and (MEOS_CM_dup = MEOS_CM_dup_milliman or MEOS_CM_dup = MEOS_CM_overlap_milliman) then MEOS_CM_dup_agree = 1;
 		else MEOS_CM_dup_agree = 0;
 
 	agree_flag = max(of no_episode_agree -- MEOS_CM_dup_agree);
