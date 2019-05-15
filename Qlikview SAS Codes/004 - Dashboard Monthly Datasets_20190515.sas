@@ -170,6 +170,11 @@ data epi_detail1;
 	            else if BMT ne REC_BMT_MILLIMAN and CANCER_TYPE in ('Chronic Leukemia') then BMT_MATCH='No';
 		end;
 
+		if 	PTD_CHEMO_MATCH ^= 'N/A' 				then HIGH_LOW_RISK_MATCH = PTD_CHEMO_MATCH;
+			else if LOW_RISK_BLAD_MATCH ^= 'N/A' 	then HIGH_LOW_RISK_MATCH = LOW_RISK_BLAD_MATCH;
+			else if CAST_SENS_PROS_MATCH ^= 'N/A' 	then HIGH_LOW_RISK_MATCH = CAST_SENS_PROS_MATCH;
+			else HIGH_LOW_RISK_MATCH = 'N/A';
+
         NUM_OCM1_N = input(NUM_OCM1,12.);
         NUM_OCM2_N = input(NUM_OCM2,12.);
         NUM_OCM3_N = input(NUM_OCM3,12.);
@@ -597,6 +602,8 @@ end;
 **************************************************************;
 *****************END ATTRIBUTION PROCESSING*******************;
 **************************************************************;
+
+	if recon_episode ^= 1 then HIGH_LOW_RISK_MATCH = 'N/A';
 
     TOTAL_EPISODE_COST=ALLOWED_MILLIMAN;
 
@@ -2142,13 +2149,14 @@ create table recoup2_&ocmid1. as
 	left join recoup1 as B
 		on A.claim_id = B.ccw_claim_id
 		and A.start_date_use = B.service_date_use
+		and A.bene_id = B.ccw_beneficiary_id
 ;
 quit;
 
 *make sure there are no duplicate claims after join*;
 *dupclms table should have 0 obs*;
 proc sort data = recoup2_&ocmid1. nodupkey dupout = dupclms;
-	by claim_id start_date_use;
+	by claim_id start_date_use bene_id;
 run;
 
 *subset MEOS recoupments that do not join onto MEOS claims files*;
@@ -2166,8 +2174,11 @@ quit;
 /*run;*/
 
 *stack claims*;
-data MEOS_claims_recoup_&ocmid1.;
+data out.clm_detail_MEOSrecoup_&set_name._&ocmid1.;
 	set recoup2_&ocmid1. recoup3_&ocmid1.;
+	format OCM_NAME_RECOUP $255. ep_id_meosrecoup $55.;
+	ep_id_meosrecoup = coalescec(ep_id_meos,ep_id_use,OCM_Episode_ID);
+    OCM_NAME_RECOUP = &ocmfac_name.||' (OCM ID '||ocm_id||')';
 run;
 
 %end;
@@ -2192,8 +2203,8 @@ run;
 /*%claims(468,50227,'Johnson City Regional Cancer Center', interface);*/
 /*%claims(459,50243,'University Hospitals Medical Group', interface);*/
 /*%claims(137,50136,'Regional Cancer Care Associates', interface);*/
-
-
+/**/
+/**/
 /**----------- Emerge claims files -----------*;*/
 /*%claims(255,50179,'MSMC Oncology LLC', emerge);*/
 /*%claims(257,50195,'Cancer Center of East Alabama', emerge);*/
@@ -2207,7 +2218,7 @@ run;
 /*%claims(468,50227,'Johnson City Regional Cancer Center', emerge);*/
 /*%claims(459,50243,'University Hospitals Medical Group', emerge);*/
 /*%claims(137,50136,'Regional Cancer Care Associates', emerge);*/
-/**/
+
 /**----------- MEOS claims files -----------*;*/
 %claims(255,50179,'MSMC Oncology LLC', MEOS);
 %claims(257,50195,'Cancer Center of East Alabama', MEOS);
@@ -2271,7 +2282,7 @@ run;
 %if &report. = MEOS %then %do;
 
 data out.claims_detail_MEOSrecoup;
-	set MEOS_claims_recoup_:;
+	set out.clm_detail_MEOSrecoup_:;
 run;
 
 %end;
@@ -2282,6 +2293,23 @@ run;
 *Claims Output*;
 %claimsoutput(interface, interf_em, emerge);
 %claimsoutput(MEOS,MEOS,MEOS);
+
+
+*create main joining table*;
+data master_join1;
+	set out.episode_detail_combined  (keep=OCM_NAME OCM_ID ep_id_use)
+		out.claims_detail_MEOSrecoup (keep=OCM_NAME_RECOUP OCM_ID ep_id_meosrecoup) ;
+		format OCM_NAME_USE $255. ep_id_final $55.;
+		OCM_NAME_USE = coalescec(OCM_NAME,OCM_NAME_RECOUP) ;
+		ep_id_final = trim(coalescec(ep_id_use,ep_id_meosrecoup)) ;
+
+	drop OCM_NAME OCM_NAME_RECOUP ep_id_use ep_id_meosrecoup;
+run;
+
+proc sort data = master_join1 nodupkey out = out.master_join;
+	by OCM_NAME_USE OCM_ID ep_id_final;
+	where ep_id_final ^= '';
+run;
 
 
 **Demo Output**;
@@ -2458,8 +2486,8 @@ run;
 
 
 *Demo Output*;
-/*%demooutput(interface, interf_em, emerge);*/
-/*%demooutput(MEOS,MEOS,MEOS);*/
+%demooutput(interface, interf_em, emerge);
+%demooutput(MEOSrecoup,MEOSrecoup,MEOSrecoup);
 
 *main & emerge*;
 proc sql;
@@ -2494,21 +2522,27 @@ run;
 proc sql;
 	create table claims_demo_join_meos as
 	select a.*, b.EP_BEG, b.increment
-	from claims_detail_MEOS_demo as A
+	from claims_detail_MEOSrecoup_demo as A
 	left join out.episode_detail_combined_demo as B
 	on a.EP_ID2 = b.EP_ID_use;
 quit;
 
-data out.claims_detail_MEOS_demo;
-	set claims_demo_join_meos (rename = (START_DATE_USE=START_DATE_USE0));
+data out.claims_detail_MEOSrecoup_demo;
+	set claims_demo_join_meos (rename = (START_DATE_USE=START_DATE_USE0 
+										 Service_Date_use=Service_Date_use0 
+										 Chemo_Date_Contest=Chemo_Date_Contest0 ));
 
 	format START_DATE_USE mmddyy10.;
+	HIC_NUMBER_DEMO = '999999999X';
 
 	%macro date(date);
 		&date. = &date.0 + increment;
 	%mend date;
 
 	%date(START_DATE_USE);
+	%date(Service_Date_use);
+	%date(Chemo_Date_Contest);
+
 run;
 
 
@@ -2604,6 +2638,7 @@ run;
 %sas_2_csv(out.episode_detail_combined,episode_detail_combined.csv);
 %sas_2_csv(out.claims_detail_interf_em,claims_detail_interf_em.csv);
 %sas_2_csv(out.claims_detail_MEOSrecoup,claims_detail_MEOSrecoup.csv);
+%sas_2_csv(out.master_join,master_join.csv);
 %sas_2_csv(out.patient_journey_interface,patient_journey_interface.csv);
 %sas_2_csv(out.util_filter_interface,util_filter_interface.csv);
 /**/
