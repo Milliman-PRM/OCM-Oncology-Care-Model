@@ -14,7 +14,7 @@ libname rec2	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Recon
 libname rec3	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Reconciliation\PP3" ;
 
 libname out "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance" ;
-libname outfinal "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance\May19" ;
+libname outfinal "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance\Aug19" ;
 libname attfin  "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance\May19" ;
 libname r2 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Baseline\V3" ;
 
@@ -22,7 +22,7 @@ options ls=132 ps=70 obs=MAX mprint mlogic; run ;
 
 %let bl_1 = blv3 ; *** baseline version, in preparation for multiple versions of these data files *** ; 
 %let vers = A ; *** indicates A(latest qtr claims only) vs B processing(all qtrs epi files received) *** ;
-%let bl = p5&vers. ; *** performance period of latest bene file received *** ; 
+%let bl = p6&vers. ; *** performance period of latest bene file received *** ; 
 %let bla = p5A ; *** version of latest attribution file  *** ; 
 
 %let Rvers1 = R2 ; *** R = Reconciliation, 0 = Initial Reconciliation, 1 = True Up #1, 2 = True Up #2  *** ;
@@ -40,7 +40,7 @@ options ls=132 ps=70 obs=MAX mprint mlogic; run ;
 
 %let att_avail = 1 ; ***1 when attribution is most recent, 0 when reconciliation most recent *** ;
 
-%let no_bene = mdy(7,1,2018) ; *** First day with no bene file (Only applicable when vers=A)*** ;
+%let no_bene = mdy(1,1,2019) ; *** First day with no bene file (Only applicable when vers=A)*** ;
 
 **************************************************************************** ;
 **************************************************************************** ;
