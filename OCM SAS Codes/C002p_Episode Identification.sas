@@ -15,6 +15,8 @@ libname in7 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Perf
 libname in8 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Performance\FBQ08" ; *** locale of SAS reads. *** ;
 libname in9 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Performance\FBQ09" ; *** locale of SAS reads. *** ;
 libname in10 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Performance\FBQ10" ; *** locale of SAS reads. *** ;
+libname in11 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Performance\FBQ11" ; *** locale of SAS reads. *** ;
+
 
 libname out "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance" ;
 
@@ -28,6 +30,7 @@ options ls=132 ps=70 obs=max nomprint nomlogic; run ;
 %include "H:\OCM - Oncology Care Model\44 - Oncology Care Model 2019\Work Papers\SAS\000_Formats PP3.sas" ;
 %include "H:\OCM - Oncology Care Model\44 - Oncology Care Model 2019\Work Papers\SAS\000_Formats PP4.sas" ;
 %include "H:\OCM - Oncology Care Model\44 - Oncology Care Model 2019\Work Papers\SAS\000_Formats PP5.sas" ;
+%include "H:\OCM - Oncology Care Model\44 - Oncology Care Model 2019\Work Papers\SAS\000_Formats PP6.sas" ;
 *** Cancer diagnosis code lists *** ;
 %include "H:\OCM - Oncology Care Model\44 - Oncology Care Model 2019\Work Papers\SAS\000_Cancer Formats PP3.sas" ;
 *** Cancer assignment macro  *** ;
@@ -37,7 +40,7 @@ options ls=132 ps=70 obs=max nomprint nomlogic; run ;
 %include "H:\OCM - Oncology Care Model\44 - Oncology Care Model 2019\Work Papers\SAS\000_Formats_Predict_Flags PP3.sas" ;
 RUN ;
 ********************************************************************** ;
-%let type=p5 ; *** performance period designation *** ; RUN ;
+%let type=p6 ; *** performance period designation *** ; RUN ;
 %let vers=A ; *** indicates A (without epi file) or B (with epi file) processing *** ; RUN ;
 %let sd = mdy(7,1,2016) ; *** Performance period start date. ;
 %let fbq01 = mdy(7,1,2016) ; 
@@ -50,6 +53,7 @@ RUN ;
 %let fbq08 = mdy(4,1,2018) ;
 %let fbq09 = mdy(7,1,2018) ;
 %let fbq10 = mdy(10,1,2018) ;
+%let fbq11 = mdy(1,1,2019) ;
 ********************************************************************** ;
 	*** Attribution File Name Macro Variables *** ;
 ********************************************************************** ;
@@ -230,7 +234,8 @@ data lines chemo EM(DROP=EP_ID) lines_partd ;
 		   (mdy(1,2,2017) le expnsdt1 le mdy(7,1,2017) and put(HCPCS_CD,$Chemo_J2p.) = "Y") OR
 		   (mdy(7,2,2017) le expnsdt1 le mdy(1,1,2018) and put(HCPCS_CD,$Chemo_J3p.) = "Y") or
 		   (mdy(1,2,2018) le expnsdt1 le mdy(7,1,2018) and put(HCPCS_CD,$Chemo_J4p.) = "Y") or
-		   (mdy(7,2,2018) le expnsdt1 and put(HCPCS_CD,$Chemo_J5p.) = "Y")	then do ;
+		   (mdy(7,2,2018) le expnsdt1 le mdy(1,1,2019) and put(HCPCS_CD,$Chemo_J5p.) = "Y") or
+		   (mdy(1,2,2019) le expnsdt1 and put(HCPCS_CD,$Chemo_J6p.) = "Y")	then do ;
 
 			**The chemotherapy drug line item must have a “line first expense date” in the appropriate 
 			  6 month “Episodes Beginning” period in Table 1, inclusive of end dates. ** ;
@@ -349,6 +354,7 @@ data out.outpatient_&type.&vers._&dsid. op_partd;
 	************************************************************************************************* ;
 			IF REV_DT GE &SD. then output out.outpatient_&type.&vers._&dsid.;
 			output op_partd ;
+run;
 
 
 data chemo_candidates2(keep =  bene_id clm_id thru_dt rev_dt trigger_date has_cancer perf_chemo UROTHELIAL)  
@@ -359,9 +365,10 @@ data chemo_candidates2(keep =  bene_id clm_id thru_dt rev_dt trigger_date has_ca
 	  in any revenue center. ** ;
 	if (rev_dt le mdy(1,1,2017) and put(HCPCS_CD,$Chemo_J.) =  "Y"  ) or
 	   (mdy(1,2,2017) le rev_dt le mdy(7,1,2017) and put(HCPCS_CD,$Chemo_J2p.) =  "Y"  ) or
-	   (mdy(7,2,2017) le rev_dt le mdy(1,1,2018) and put(HCPCS_CD,$Chemo_J3p.) =  "Y"  )or
-	   (mdy(1,2,2018) le rev_dt le mdy(7,1,2018) and put(HCPCS_CD,$Chemo_J4p.) =  "Y"  )or
-	   (mdy(7,2,2018) le rev_dt and put(HCPCS_CD,$Chemo_J5p.) =  "Y"  )
+	   (mdy(7,2,2017) le rev_dt le mdy(1,1,2018) and put(HCPCS_CD,$Chemo_J3p.) =  "Y"  ) or
+	   (mdy(1,2,2018) le rev_dt le mdy(7,1,2018) and put(HCPCS_CD,$Chemo_J4p.) =  "Y"  ) or
+	   (mdy(7,2,2018) le rev_dt le mdy(1,1,2019) and put(HCPCS_CD,$Chemo_J5p.) = "Y"  ) or
+	   (mdy(1,2,2019) le rev_dt and put(HCPCS_CD,$Chemo_J6p.) =  "Y"  )
 		then do ;
 
 	** The revenue center date on the same revenue center in which the HCPCS code is found must be in the 
@@ -423,11 +430,13 @@ data chemo_candidates3_cand(keep =  bene_id pde_id trigger_date perf_chemo) ;
 
 	if  (srvc_dt le mdy(1,1,2017) and (put(NDC9, $Chemo_NDC.) = "Y" or NDC8 = '00780645') ) or 
 		(mdy(1,2,2017) le srvc_dt le mdy(7,1,2017) and put(NDC9, $Chemo_NDC2p.) = "Y" ) or
-		(mdy(7,2,2017) le srvc_dt le mdy(1,1,2018) and put(NDC9, $Chemo_NDC3p.) = "Y")or
-		(mdy(1,2,2018) le srvc_dt le mdy(7,1,2018) and put(NDC9, $Chemo_NDC4p.) = "Y")or
-		(mdy(7,2,2018) le srvc_dt and put(NDC9, $Chemo_NDC5p.) = "Y")
+		(mdy(7,2,2017) le srvc_dt le mdy(1,1,2018) and put(NDC9, $Chemo_NDC3p.) = "Y") or
+		(mdy(1,2,2018) le srvc_dt le mdy(7,1,2018) and put(NDC9, $Chemo_NDC4p.) = "Y") or
+	    (mdy(7,2,2018) le srvc_dt le mdy(1,1,2019) and put(NDC9, $Chemo_NDC5p.) = "Y") or
+	    (mdy(1,2,2019) le srvc_dt and put(NDC9, $Chemo_NDC6p.) = "Y")
 		 then do ;
-		** The claim “fill date” must be in the appropriate 6 month “Episode Beginning” period in 
+
+		 ** The claim “fill date” must be in the appropriate 6 month “Episode Beginning” period in 
 		   Table 1, inclusive of end dates. ** ;
 			chemo = 1 ;
 			format trigger_date perf_chemo mmddyy10. ;
@@ -996,12 +1005,13 @@ data epi_orig_step1 (drop=chemo_flg1);
 
 		else do ;
 			%IF "&VERS." = "A" %THEN %DO ;
-			if q1 = 0 and q2 = 0 and q3 = 0 AND q4 = 0 and q5 = 0  AND Q6 = 0 and Q7 = 0 and Q8 = 0 and Q9 = 0 and Q10 = 1 then EP_BEG = &fbq10.  ;
+			if q1 = 0 and q2 = 0 and q3 = 0 AND q4 = 0 and q5 = 0  AND Q6 = 0 and Q7 = 0 and Q8 = 0 and Q9 = 0 and Q10 = 0 and Q11 = 1 then EP_BEG = &fbq11.  ;
 			%END ;
 			%ELSE %DO ;
-			if q10 = 1 and (DOD = . or DOD gt &fbq10.) then EP_BEG = &fbq10. ;
+			if q11 = 1 and (DOD = . or DOD gt &fbq11.) then EP_BEG = &fbq11. ;
 			%END ;
 
+			else if q10 = 1 and (DOD = . or DOD gt &fbq10.) then EP_BEG = &fbq10. ;
 			else if q9 = 1 and (DOD = . or DOD gt &fbq09.) then EP_BEG = &fbq09. ;
 			else if q8 = 1 and (DOD = . or DOD gt &fbq08.) then EP_BEG = &fbq08. ;
 			else if q7 = 1 and (DOD = . or DOD gt &fbq07.) then EP_BEG = &fbq07. ;
@@ -1014,6 +1024,7 @@ data epi_orig_step1 (drop=chemo_flg1);
 		end ;
 	END ;
 
+	if ep_beg = . and q11 = 1 and sum(q10,q9,q8,q7,q6,q5,q4,q3,q2,q1) = 0 and dod ne . and dod le &fbq11. then ep_beg = &fbq10. ;
 	if ep_beg = . and q10 = 1 and sum(q9,q8,q7,q6,q5,q4,q3,q2,q1) = 0 and dod ne . and dod le &fbq10. then ep_beg = &fbq09. ;
 	if ep_beg = . and q9 = 1 and sum(q8,q7,q6,q5,q4,q3,q2,q1) = 0 and dod ne . and dod le &fbq09. then ep_beg = &fbq08. ;
 	if ep_beg = . and q8 = 1 and sum(q7,q6,q5,q4,q3,q2,q1) = 0 and dod ne . and dod le &fbq08. then ep_beg = &fbq07. ;
@@ -2066,7 +2077,7 @@ data out.episodes_&type.&vers._&dsid. ;
 	if cancer = "Intestinal Cancer" then cancer = "Small Intestine / Colorectal Cancer" ;
 
 	if a ;
-	/*if Q10 = 1 AND (ep_end > mdy(10,1,2018) or (q9 = 0 and q8 = 0 and q7 = 0 and q6 = 0 and q5 = 0 and q4 = 0 and q3=0 and q2=0 and q1=0)) then do ;
+	if Q10 = 1 AND (ep_end > mdy(10,1,2018) or (q9 = 0 and q8 = 0 and q7 = 0 and q6 = 0 and q5 = 0 and q4 = 0 and q3=0 and q2=0 and q1=0)) then do ;
 		CANCER_TYPE = CANCER_TYPEQ10 ;
 		COMMON_CANCER_TYPE = COMMON_CANCER_TYPEQ10+0;
 		RISK_SCORE = risk_score_q10 ;
@@ -2077,7 +2088,7 @@ data out.episodes_&type.&vers._&dsid. ;
 		DIED = DIEDQ10 ;
 		DUAL = DUALQ10 ;
 	end ;
-	else*/ if Q9 = 1 AND (ep_end > mdy(7,1,2018) or (q8 = 0 and q7 = 0 and q6 = 0 and q5 = 0 and q4 = 0 and q3=0 and q2=0 and q1=0)) then do ;
+	else if Q9 = 1 AND (ep_end > mdy(7,1,2018) or (q8 = 0 and q7 = 0 and q6 = 0 and q5 = 0 and q4 = 0 and q3=0 and q2=0 and q1=0)) then do ;
 		CANCER_TYPE = CANCER_TYPEQ09 ;
 		COMMON_CANCER_TYPE = COMMON_CANCER_TYPEQ09+0;
 		RISK_SCORE = risk_score_q09 ;
@@ -2177,10 +2188,10 @@ data out.episodes_&type.&vers._&dsid. ;
 		DUAL = DUALQ01 ;
 	end ;
 
-	/*if cancer_type = "  " then do ;
+	if cancer_type = "  " then do ;
 		CANCER_TYPE = CANCER_TYPEQ10 ;
 		COMMON_CANCER_TYPE = COMMON_CANCER_TYPEQ10+0;
-	end ;*/
+	end ;
 	if cancer_type = "  " then do ;
 		CANCER_TYPE = CANCER_TYPEQ09 ;
 		COMMON_CANCER_TYPE = COMMON_CANCER_TYPEQ09+0;
@@ -2242,7 +2253,7 @@ data quarters ;
 		in7.epi_&dsid.(in=g) 
 		in8.epi_&dsid.(in=h) 
 		in9.epi_&dsid.(in=i) 
-		/*in10.epi_&dsid.(in=j) */
+		in10.epi_&dsid.(in=j) 
 ;
 		q=0 ;
 		if a then q = 1 ;
@@ -2254,7 +2265,7 @@ data quarters ;
 		if g then q = 7 ;
 		if h then q = 8 ;
 		if i then q = 9 ;
-		/*if j then q = 10 ; */
+		if j then q = 10 ; 
 
 
 proc sort data=quarters ; by bene_id q ;
@@ -2262,7 +2273,7 @@ proc sort data=quarters ; by bene_id q ;
 
 proc sql ;
 	create table epi_q as
-	select A.BENE_ID, a.ep_id, a.ep_beg, a.ep_end, a.q1, a.q2, a.q3, a.q4, a.q5, a.q6, a.q7, a.q8, a.q9, /*a.q10,  */q, 
+	select A.BENE_ID, a.ep_id, a.ep_beg, a.ep_end, a.q1, a.q2, a.q3, a.q4, a.q5, a.q6, a.q7, a.q8, a.q9, a.q10,  q, 
 			ALL_TOS,INP_ADMSNS,INP_EX,INP_AMB,
 			UNPLANNED_READ,ER_OBS_AD,ER_AD,OBS_AD,ER_AND_OBS_AD,NO_ER_NO_OBS_AD,OBS_STAYS,
 			OBS_ER,OBS_NO_ER,ER_NO_AD_OBS,EM_VISITS,EM_VISITS_ALL,
@@ -2385,19 +2396,28 @@ data epi_q ;
 		else if q8 = 1 and q = 8 then ertrig = 1 ;
 	end ;
 	*** Episodes beginning in ninth  quarter *** ;
-	*else if ep_beg < mdy(10,1,2018) then do ;
-	else do;
+	else if ep_beg < mdy(10,1,2018) then do ;
 		if q < 9 then do ;
 			sumi=0 ;
 			maxi = 0 ;
 		end ;
-		*if q10 = 1 and q = 10 then ertRig = 1 ;
-		*else if q9 = 1 and q = 9 then ertrig = 1 ;
-		if q9 = 1 and q = 9 then ertRig = 1 ;
+		if q10 = 1 and q = 10 then ertRig = 1 ;
+		else if q9 = 1 and q = 9 then ertrig = 1 ;
 	end ;
+	*** Episodes beginning in tenth  quarter *** ;
+	*else if ep_beg < mdy(1,1,2019) then do ;
+	else do;
+		if q < 10 then do ;
+			sumi=0 ;
+			maxi = 0 ;
+		end ;
+		*if q11 = 1 and q = 11 then ertRig = 1 ;
+		*else if q10 = 1 and q = 10 then ertrig = 1 ;
+		if q10 = 1 and q = 10 then ertRig = 1 ;
+	end ;
+run;
 
-
-proc sort data=EPI_Q ; by bene_id ep_id ;
+proc sort data=EPI_Q ; by bene_id ep_id ; run;
 proc means data= EPI_Q noprint sum ; by bene_id ep_id ;
 	where sumi = 1 ;
 	var ALL_TOS INP_ADMSNS INP_EX INP_AMB UNPLANNED_READ ER_OBS_AD 
@@ -2710,10 +2730,11 @@ data out.epi_prelim_&type.&vers._&dsid. ;
 	DATA_COVERAGE = 1 ; *** Indicates full data coverage with demographics available. *** ;
 	*** Indicates Gaps in Data Coverage *** ;
 	%if "&vers." = "A" %then %do ;
-      IF sum(Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,Q9)=0 and Q10=1   													THEN DATA_COVERAGE = 2 ;
+      IF sum(Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,Q9,Q10)=0 and Q11=1   													THEN DATA_COVERAGE = 2 ;
     %end ;
 
-	/*IF SUM(Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,Q9) = 0	and q10=1 AND 			(DOD = . OR DOD > MDY(12,31,2018)) 	THEN DATA_COVERAGE = 3 ;*/
+	*IF SUM(Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,Q9,Q10) = 0	and q11=1 AND 			(DOD = . OR DOD > MDY(03,31,2018)) 	THEN DATA_COVERAGE = 3 ;
+	IF SUM(Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,Q9) = 0	and q10=1 AND 			(DOD = . OR DOD > MDY(12,31,2018)) 	THEN DATA_COVERAGE = 3 ;
 	IF SUM(Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8) = 0	and q9=1 AND 			(DOD = . OR DOD > MDY(09,30,2018)) 	THEN DATA_COVERAGE = 3 ;
 	IF SUM(Q1,Q2,Q3,Q4,Q5,Q6,Q7) = 0	and q8=1 AND 			(DOD = . OR DOD > MDY(06,30,2018)) 	THEN DATA_COVERAGE = 3 ;
 	IF SUM(Q1,Q2,Q3,Q4,Q5,Q6) = 0 		and q7=1 AND q8=0 AND 	(DOD = . OR DOD > MDY(03,31,2018)) 	THEN DATA_COVERAGE = 3 ;

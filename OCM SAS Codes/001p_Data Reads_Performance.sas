@@ -4,16 +4,16 @@
 *** Note to programmer: Layouts have changed EVERY data submission.  
 *** Need to recheck with column headers in file each and every submission. *** ;
 %let indir1 = R:\data\HIPAA\OCM_Oncology_Care_Model_PP\02 - Performance Data ;
-libname out "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Performance\FBQ10" ;
+libname out "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Performance\FBQ11" ;
 
 options ls=132 ps=70 obs =max;
 
 ********************************************************************** ;
 ********************************************************************** ;
-%let cdate = 20190430;  *** date in file names *** ;
-%let cdate1 = 20190218;  *** date in file names - bene file *** ;
+%let cdate = 20190731;  *** date in file names *** ;
+%let cdate1 = 20190430;  *** date in file names - bene file *** ;
 
-%let q = 10 ;  *** quarter of file submission *** ;
+%let q = 11 ;  *** quarter of file submission *** ;
 
 run ;
 
@@ -1447,10 +1447,11 @@ run ;
 *%claims(4) ; *** Not provided as of fbq08 ;
 *%claims(5) ; *** Not provided as of fbq09 ;
 *%claims(6) ; *** Not provided as of fbq10 ;
-%claims(07,7) ;
+*%claims(07,7) ; *** Not provided as of fbq11 ;
 %claims(08,8) ;
 %claims(09,9) ;
 %claims(10,10) ;
+%claims(11,11) ;
 
 %mend readsclaim ; run ;
 ********************************************************************** ;

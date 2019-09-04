@@ -15,7 +15,7 @@ libname rec3 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Reco
 
 
 libname out "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance" ;
-libname outfinal "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance\May19" ;
+libname outfinal "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\07 - Processed Data\Performance\Aug19" ;
 options ls=132 ps=70 obs=MAX nomprint mlogic; run ;
 
 
@@ -26,6 +26,7 @@ options ls=132 ps=70 obs=MAX nomprint mlogic; run ;
 %include "H:\OCM - Oncology Care Model\44 - Oncology Care Model 2019\Work Papers\SAS\000_Formats PP3.sas" ;
 %include "H:\OCM - Oncology Care Model\44 - Oncology Care Model 2019\Work Papers\SAS\000_Formats PP4.sas" ;
 %include "H:\OCM - Oncology Care Model\44 - Oncology Care Model 2019\Work Papers\SAS\000_Formats PP5.sas" ;
+%include "H:\OCM - Oncology Care Model\44 - Oncology Care Model 2019\Work Papers\SAS\000_Formats PP6.sas" ;
 *** Cancer diagnosis code lists *** ;
 %include "H:\OCM - Oncology Care Model\44 - Oncology Care Model 2019\Work Papers\SAS\000_Cancer Formats PP3.sas" ;
 *** Cancer assignment macro  *** ;
@@ -52,7 +53,7 @@ run ;
 ********************************************************************** ;
 ********************************************************************** ;
 %let vers = A ; *** indicates A(latest qtr claims only) vs B processing(all qtrs epi files received) *** ;
-%let bl = p5&vers. ; *** performance period of latest bene file received *** ; 
+%let bl = p6&vers. ; *** performance period of latest bene file received *** ; 
 ********************************************************************** ;
 	*** Attribution File/Recon File Name Macro Variables *** ;
 ***Version variables refers to recon attribution files: TU variables refers to recon episode and claims files***;
@@ -74,7 +75,7 @@ RUN ;
 
 *** Note if CMS starts to provide beneficiary data with the early quarterly claims submission,
 	then use of latest_qtr should be removed from derivation of DIED_MILLIMAN. *** ;
-%let latest_qtr = mdy(10,1,2018) ; *** beginning of latest available quarter *** ;
+%let latest_qtr = mdy(1,1,2019) ; *** beginning of latest available quarter *** ;
 %let sd = mdy(7,1,2016) ;
 %let potential = mdy(7,1,2018) ;  *** date of latest episode begin date included in attribution/recon files. *** ;
 
@@ -91,7 +92,8 @@ run ;
 	ELSE IF EP_BEG < MDY(7,2,2017) THEN EPISODE_PERIOD = "PP2" ;
 	ELSE IF EP_BEG < MDY(1,2,2018) THEN EPISODE_PERIOD = "PP3" ;
 	ELSE IF EP_BEG < MDY(7,2,2018) THEN EPISODE_PERIOD = "PP4";
-	ELSE EPISODE_PERIOD = "PP5" ;
+	ELSE IF EP_BEG < MDY(1,2,2019) THEN EPISODE_PERIOD = "PP5";
+	ELSE EPISODE_PERIOD = "PP6" ;
 %MEND ;
 
 ********************************************************************** ;
@@ -906,7 +908,8 @@ data outfinal.SC_op_&bl._&ds. ;
    		   (mdy(1,2,2017) le rev_dt le mdy(7,1,2017) and put(HCPCS_CD,$Chemo_J2p.) = "Y")    or
    		   (mdy(7,2,2017) le rev_dt and put(HCPCS_CD,$Chemo_J3p.) = "Y")  or
 		   (mdy(1,2,2018) le rev_dt and put(HCPCS_CD,$Chemo_J4p.) = "Y")  or
-		   (mdy(7,2,2018) le rev_dt and put(HCPCS_CD,$Chemo_J5p.) = "Y")  then DO ;
+		   (mdy(7,2,2018) le rev_dt and put(HCPCS_CD,$Chemo_J5p.) = "Y")  or
+		   (mdy(1,2,2019) le rev_dt and put(HCPCS_CD,$Chemo_J6p.) = "Y") then DO ;
 			SERVICE_CAT = 'Chemotherapy Drugs (Part B)';
 			IF BLAD_LR NE 1 THEN BLAD_OTH = 1 ;
 			IF PROST_CAST NE 1 THEN PROST_OTH = 1 ;
@@ -1051,7 +1054,8 @@ data outfinal.SC_pb_&bl._&ds.  ;
 	   (mdy(1,2,2017) le expnsdt1 le mdy(7,1,2017) and put(HCPCS_CD,$Chemo_J2p.) = "Y") or
 	   (expnsdt1 ge mdy(7,2,2017) and put(HCPCS_CD,$Chemo_J3p.) = "Y") 		or 
 	   (expnsdt1 ge mdy(1,2,2018) and put(HCPCS_CD,$Chemo_J4p.) = "Y") 	    or		
-	   (expnsdt1 ge mdy(7,2,2018) and put(HCPCS_CD,$Chemo_J5p.) = "Y") 	then DO ;		
+	   (expnsdt1 ge mdy(7,2,2018) and put(HCPCS_CD,$Chemo_J5p.) = "Y") 		or
+	   (expnsdt1 ge mdy(1,2,2019) and put(HCPCS_CD,$Chemo_J6p.) = "Y") then DO ;		
 		SERVICE_CAT = 'Chemotherapy Drugs (Part B)';
 		IF BLAD_LR NE 1 THEN BLAD_OTH = 1 ;
 		IF PROST_CAST NE 1 THEN PROST_OTH = 1 ;
@@ -1337,7 +1341,8 @@ data pde ;
 	   (mdy(1,2,2017) le srvc_dt le mdy(7,1,2017) and put(NDC9, $Chemo_NDC2p.) = "Y" ) or 
 	   (mdy(7,2,2017) le srvc_dt and put(NDC9, $Chemo_NDC3p.) = "Y" ) or
 	   (mdy(1,2,2018) le srvc_dt and put(NDC9, $Chemo_NDC4p.) = "Y" ) or
-	   (mdy(7,2,2018) le srvc_dt and put(NDC9, $Chemo_NDC5p.) = "Y" )then DO ;
+	   (mdy(7,2,2018) le srvc_dt and put(NDC9, $Chemo_NDC5p.) = "Y" ) or 
+	   (mdy(1,2,2019) le srvc_dt and put(NDC9, $Chemo_NDC6p.) = "Y" ) then DO ;
 			SERVICE_CAT = 'Chemotherapy Drugs (Part D)' ;
 			IF BLAD_LR NE 1 THEN BLAD_OTH = 1 ;
 			IF PROST_CAST NE 1 THEN PROST_OTH = 1 ;
@@ -1529,7 +1534,8 @@ data ALL_CLAIMS2 OCM2_CHK  radonc chemo_partb I1  ;
 		** Breaking out chemotherapy into types ** ;
 		if SERVICE_CAT = 'Chemotherapy Drugs (Part B)' then do ;
 			output chemo_partb ;
-			if START_DATE ge mdy(7,2,2018) then CPB_CAT = put(HCPCS_CD,$Chemo_J_cat5p.) ;
+			if START_DATE ge mdy(1,2,2019) then CPB_CAT = put(HCPCS_CD,$Chemo_J_cat6p.) ;
+			else if START_DATE ge mdy(7,2,2018) then CPB_CAT = put(HCPCS_CD,$Chemo_J_cat5p.) ;
 			else if START_DATE ge mdy(1,2,2018) then CPB_CAT = put(HCPCS_CD,$Chemo_J_cat4p.) ;
 			else if START_DATE ge mdy(7,2,2017) then CPB_CAT = put(HCPCS_CD,$Chemo_J_cat3p.) ;
 			else CPB_CAT = put(HCPCS_CD,$Chemo_J_cat2p.) ;
@@ -1538,7 +1544,8 @@ data ALL_CLAIMS2 OCM2_CHK  radonc chemo_partb I1  ;
 		end ;
 
 		if SERVICE_CAT = 'Chemotherapy Drugs (Part D)' then do ;
-			if PART_D_SERVICE_DATE ge mdy(7,2,2018) then CPD_CAT = put(NDC9,$Chemo_NDC_cat5p.) ;
+			if PART_D_SERVICE_DATE ge mdy(1,2,2019) then CPD_CAT = put(NDC9,$Chemo_NDC_cat6p.) ;
+			else if PART_D_SERVICE_DATE ge mdy(7,2,2018) then CPD_CAT = put(NDC9,$Chemo_NDC_cat5p.) ;
 			else if PART_D_SERVICE_DATE ge mdy(1,2,2018) then CPD_CAT = put(NDC9,$Chemo_NDC_cat4p.) ;
 			else if PART_D_SERVICE_DATE ge mdy(7,2,2017) then CPD_CAT = put(NDC9,$Chemo_NDC_cat3p.) ;
 			else CPD_CAT = put(NDC9,$Chemo_NDC_cat2p.) ;
@@ -2235,7 +2242,8 @@ DATA EPIPRE ;
 	if ep_end ge ep_beg ; *** removes patients dying before performance period. ;
 
 	*** Assigning QTR_START_DATE to reflect EP_BEG *** ;
-		if EP_BEG GE MDY(7,1,2018) THEN QTR_START_DATE = &LATEST_QTR.  ;
+		if EP_BEG GE MDY(10,1,2018) THEN QTR_START_DATE = &LATEST_QTR.  ;
+		ELSE if EP_BEG GE MDY(7,1,2018) THEN QTR_START_DATE = QTR_START_DATEQ09  ;
 		ELSE if EP_BEG GE MDY(4,1,2018) THEN QTR_START_DATE = QTR_START_DATEQ08  ;
 		ELSE if EP_BEG GE MDY(1,1,2018) THEN QTR_START_DATE = QTR_START_DATEQ07  ;
 		ELSE if EP_BEG GE MDY(10,1,2017) THEN QTR_START_DATE = QTR_START_DATEQ06  ;
@@ -2555,6 +2563,8 @@ DATA EPIPRE ;
 		else if ep_beg>mdy(9,30,2017) and ep_beg < mdy(1,2,2018) and  q6 = 0 and q7=0 and attribute_flag notin ("0","D") then perform_not_match = 1 ;
 		else if ep_beg>mdy(12,31,2017) and ep_beg < mdy(4,2,2018) and  q7 = 0 and q8=0 and attribute_flag notin ("0","D") then perform_not_match = 1 ;
 		else if ep_beg>mdy(3,31,2018) and ep_beg < mdy(7,2,2018) and  q8 = 0 and q9=0 and attribute_flag notin ("0","D") then perform_not_match = 1 ;
+		else if ep_beg>mdy(6,30,2018) and ep_beg < mdy(10,2,2018) and  q9 = 0 and q10=0 and attribute_flag notin ("0","D") then perform_not_match = 1 ;
+
 
 		*** 2. Potentially Attributable Episodes  *** ;
 	if ep_beg gt &potential. and attribute_flag = "0" then attribute_flag = "4" ;

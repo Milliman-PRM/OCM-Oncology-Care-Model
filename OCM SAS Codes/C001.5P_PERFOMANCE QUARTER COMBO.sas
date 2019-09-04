@@ -12,6 +12,8 @@ libname in7 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Perf
 libname in8 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Performance\FBQ08" ; *** locale of SAS reads. *** ;
 libname in9 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Performance\FBQ09" ; *** locale of SAS reads. *** ;
 libname in10 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Performance\FBQ10" ; *** locale of SAS reads. *** ;
+libname in11 "R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Performance\FBQ11" ; *** locale of SAS reads. *** ;
+
 
 	*** locale of attribution files.  *** ;
 libname att1 	"R:\data\HIPAA\OCM_Oncology_Care_Model_PP\06 - Read-In Raw Data\Reconciliation\PP1" ; 
@@ -57,27 +59,27 @@ RUN ;
 ********************************************************************** ;
 *** Qtrs with bene files available for processing *** ;
 %MACRO QTRS ; 
-Q1 Q2 Q3 Q4 Q5 Q6 Q7 Q8 Q9 Q10
+Q1 Q2 Q3 Q4 Q5 Q6 Q7 Q8 Q9 Q10 Q11
 %MEND QTRS ;
 ********************************************************************** ;
 *** There should be a variable for each quarter available.  However, these flags are used
     solely for identifying whether we have claims in these quarters or not (for stacking) *** ;
 %MACRO CQTRS ; 
-C1 C2 C3 C4 C5 C6 C7 C8 C9 C10
+C1 C2 C3 C4 C5 C6 C7 C8 C9 C10 C11
 %MEND CQTRS ;
 ********************************************************************** ;
 *** ONE FOR EACH AVAILABLE QUARTER AFTER Q01 *** ;
 		%MACRO INTERVALS ; 
-		I2 = 3 ; I3 = 6 ; I4 = 9 ; I5 = 12 ; I6 = 15 ; I7 = 18 ; I8 = 21 ; I9 = 24 ; I10 = 27 ;
+		I2 = 3 ; I3 = 6 ; I4 = 9 ; I5 = 12 ; I6 = 15 ; I7 = 18 ; I8 = 21 ; I9 = 24 ; I10 = 27 ; I11 = 30 ;
 		%MEND INTERVALS ;
 		%MACRO INVS ; 
-		I2-I10 
+		I2-I11 ;
 		%MEND INVS ;
 		%MACRO QIS_SETUP ; 
-		V2 = 2 ; V3 = 3 ;  V4 = 4 ; V5 = 5 ; V6 = 6 ; v7 = 7 ; v8 = 8 ; v9 = 9 ; v10 = 10 ;
+		V2 = 2 ; V3 = 3 ;  V4 = 4 ; V5 = 5 ; V6 = 6 ; v7 = 7 ; v8 = 8 ; v9 = 9 ; v10 = 10 ; v11 = 11 ;
 		%MEND ;
 		%MACRO QIS ;
-		V2-V10 ;
+		V2-V11 ;
 		%MEND QIS ;
 RUN ;
 
@@ -94,12 +96,13 @@ RUN ;
 	proc sort data=in8.&fn._5 out=file5 ; by bene_id &clm. ;
 	proc sort data=in9.&fn._6 out=file6 ; by bene_id &clm. ;
 	proc sort data=in10.&fn._7 out=file7 ; by bene_id &clm. ;
-	proc sort data=in10.&fn._8 out=file8 ; by bene_id &clm. ;
-	proc sort data=in10.&fn._9 out=file9 ; by bene_id &clm. ;
-	proc sort data=in10.&fn._10 out=file10 ; by bene_id &clm. ;
+	proc sort data=in11.&fn._8 out=file8 ; by bene_id &clm. ;
+	proc sort data=in11.&fn._9 out=file9 ; by bene_id &clm. ;
+	proc sort data=in11.&fn._10 out=file10 ; by bene_id &clm. ;
+	proc sort data=in11.&fn._11 out=file11 ; by bene_id &clm. ;
 
 	DATA STEP1 ;
-		set file1(in=a) file2(in=b) file3(in=c) file4(in=d) file5(in=E) file6(in=f) file7(in=g) file8(in=h) file9(in=i) file10(in=j); 
+		set file1(in=a) file2(in=b) file3(in=c) file4(in=d) file5(in=E) file6(in=f) file7(in=g) file8(in=h) file9(in=i) file10(in=j) file11(in=k); 
 		if a then qtr = 1 ;
 		else if b then qtr = 2 ;
 		else if c then qtr = 3 ;
@@ -110,6 +113,7 @@ RUN ;
 		else if h then qtr = 8 ;
 		else if i then qtr = 9 ;
 		else if j then qtr = 10 ;
+		else if k then qtr = 11 ;
 	proc sort data=step1 ; by bene_id &clm. descending qtr ;
 	proc sort data=step1 out=uniq(keep = bene_id &clm.  qtr) nodupkey ; by bene_id &clm.  qtr ;
 
@@ -119,7 +123,7 @@ RUN ;
 		set uniq ; by bene_id &clm.  qtr ;
 		if last.&clm.  ;
 
-	data in10.&fn. ;
+	data in11.&fn. ;
 		merge step1(in=a) step1a(in=b) ; by bene_id &clm.  qtr ;
 		if a and b ;
 
@@ -152,22 +156,24 @@ proc sort data=in8.epi_&dsid. out=epi_orig8(rename = (gender=sex)) ; by bene_id 
 
 proc sort data=in9.epi_&dsid. out=epi_orig9(rename = (gender=sex)) ; by bene_id ;
 
-%IF "&VERS." = "A" %THEN %DO ;
-	data quarter10 ;
-		set in10.dmehdr_&dsid._10(keep = bene_id)
-			in10.hhahdr_&dsid._10(keep = bene_id)
-			in10.hsphdr_&dsid._10(keep = bene_id)
-			in10.iphdr_&dsid._10(keep = bene_id)
-			in10.outhdr_&dsid._10(keep = bene_id)
-			in10.pde_&dsid._10(keep = bene_id)
-			in10.snfhdr_&dsid._10(keep = bene_id)
-			in10.phyhdr_&dsid._10(keep = bene_id) ;
+proc sort data=in10.epi_&dsid. out=epi_orig10(rename = (gender=sex)) ; by bene_id ;
 
-			proc sort data=quarter10 out=epi_orig10 nodupkey ;by bene_id ;
+%IF "&VERS." = "A" %THEN %DO ;
+	data quarter11 ;
+		set in11.dmehdr_&dsid._11(keep = bene_id)
+			in11.hhahdr_&dsid._11(keep = bene_id)
+			in11.hsphdr_&dsid._11(keep = bene_id)
+			in11.iphdr_&dsid._11(keep = bene_id)
+			in11.outhdr_&dsid._11(keep = bene_id)
+			in11.pde_&dsid._11(keep = bene_id)
+			in11.snfhdr_&dsid._11(keep = bene_id)
+			in11.phyhdr_&dsid._11(keep = bene_id) ;
+
+			proc sort data=quarter11 out=epi_orig11 nodupkey ;by bene_id ;
 %END ;
 
 %ELSE %DO ;
-	proc sort data=in10.epi_&dsid. out=epi_orig10(rename = (gender=sex)) ; by bene_id ;
+	proc sort data=in11.epi_&dsid. out=epi_orig11(rename = (gender=sex)) ; by bene_id ;
 %end ;
 
 data out.beneqtrs_&dsid.;
@@ -181,9 +187,10 @@ data out.beneqtrs_&dsid.;
 		  epi_orig8(in=h keep=bene_id)
 		  epi_orig9(in=i keep=bene_id)
 		  epi_orig10(in=j keep=bene_id)
+		  epi_orig11(in=k keep=bene_id)
 ;
 	by bene_id ;
-	q1 = 0 ; q2 = 0 ; q3 = 0 ; q4=0 ;q5=0 ; q6=0 ; q7=0 ; q8=0 ; q9=0 ; q10=0 ;
+	q1 = 0 ; q2 = 0 ; q3 = 0 ; q4=0 ;q5=0 ; q6=0 ; q7=0 ; q8=0 ; q9=0 ; q10=0 ; q11=0 ;
 	if a then q1 = 1 ;
 	if b then q2 = 1 ;
 	if c then q3 = 1 ;
@@ -194,6 +201,7 @@ data out.beneqtrs_&dsid.;
 	if h then q8 = 1 ;
 	if i then q9 = 1 ;
 	if j then q10 = 1 ;
+	if k then q11 = 1 ;
 
 	c1 = q1 ;
 	c2 = q2 ;
@@ -205,6 +213,7 @@ data out.beneqtrs_&dsid.;
 	c8 = q8 ;
 	c9 = q9 ;
 	c10 = q10 ;
+	c11 = q11 ;
 	if q2=1 and q1 = 0 then c1 = 1 ;
 	if q3=1 and q2 = 0 then c2 = 1 ;
 	if q4=1 and q3 = 0 then c3 = 1 ;
@@ -214,6 +223,7 @@ data out.beneqtrs_&dsid.;
 	if q8=1 and q7 = 0 then c7 = 1 ;
 	if q9=1 and q8 = 0 then c8 = 1 ;
 	if q10=1 and q9 = 0 then c9 = 1 ;
+	if q11=1 and q10 = 0 then c10 = 1 ;
 	
 run ;
 
@@ -230,30 +240,31 @@ DATA EPI_ALL (DROP = CANCER_TYPE: COMMON_CANCER:)
 	 CANCERS7 (KEEP = BENE_ID CANCER_TYPEQ07 COMMON_CANCER_TYPEQ07) 
 	 CANCERS8 (KEEP = BENE_ID CANCER_TYPEQ08 COMMON_CANCER_TYPEQ08) 
 	 CANCERS9 (KEEP = BENE_ID CANCER_TYPEQ09 COMMON_CANCER_TYPEQ09)  
-	 %if "&vers." = "B" %then %do ;
 	 CANCERS10 (KEEP = BENE_ID CANCER_TYPEQ10 COMMON_CANCER_TYPEQ10)  
+	 %if "&vers." = "B" %then %do ;
+	 CANCERS11 (KEEP = BENE_ID CANCER_TYPEQ11 COMMON_CANCER_TYPEQ11)  
 	 %END ;
 	;
 	SET EPI_ORIG1(IN=A) EPI_ORIG2(IN=B) EPI_ORIG3(IN=C) EPI_ORIG4(IN=D)
 		EPI_ORIG5(IN=E) EPI_ORIG6(IN=F) EPI_ORIG7(IN=G) EPI_ORIG8(IN=H) 
-		EPI_ORIG9(IN=I)
-		%if "&vers." = "B" %then %do ; EPI_ORIG10(IN=J) %END ; ;  
+		EPI_ORIG9(IN=I) EPI_ORIG10(IN=J)
+		%if "&vers." = "B" %then %do ; EPI_ORIG11(IN=K) %END ; ;  
 
-	FORMAT COMMON_CANCER_TYPEQ01-COMMON_CANCER_TYPEQ10 CANCER_TYPEQ01-CANCER_TYPEQ10 $100. ;
+	FORMAT COMMON_CANCER_TYPEQ01-COMMON_CANCER_TYPEQ11 CANCER_TYPEQ01-CANCER_TYPEQ11 $100. ;
 
 	**** Note to programmer: Arrays will need to be updated to reflect availability of quarters with data files. **** ;
-	ARRAY VALZ (X) A B C D E F G H I J; 
-	ARRAY RS (X) RISK_SCORE_Q01-RISK_SCORE_Q10  ;
-	ARRAY RA (X) RISK_ADJ_FACTORQ01-RISK_ADJ_FACTORQ10 ;
-	ARRAY INF (X) INFLATION_FACTORQ01-INFLATION_FACTORQ10 ;
-	ARRAY HR (X) HIGH_RISKQ01-HIGH_RISKQ10 ;
-	ARRAY AG (X) AGE_CATEGORYQ01-AGE_CATEGORYQ10 ;
-	ARRAY DU (X) DUALQ01-DUALQ10 ;
-	ARRAY DI (X) DIEDQ01-DIEDQ10 ;
-	ARRAY QST (X) QTR_START_DATEQ01-QTR_START_DATEQ10 ;
-	ARRAY CAN (X) CANCER_TYPEQ01-CANCER_TYPEQ10 ;
-	ARRAY CC (X) COMMON_CANCER_TYPEQ01-COMMON_CANCER_TYPEQ10 ;
-	ARRAY CF (X) CANCERS1-CANCERS10 ;
+	ARRAY VALZ (X) A B C D E F G H I J K; 
+	ARRAY RS (X) RISK_SCORE_Q01-RISK_SCORE_Q11  ;
+	ARRAY RA (X) RISK_ADJ_FACTORQ01-RISK_ADJ_FACTORQ11 ;
+	ARRAY INF (X) INFLATION_FACTORQ01-INFLATION_FACTORQ11 ;
+	ARRAY HR (X) HIGH_RISKQ01-HIGH_RISKQ11 ;
+	ARRAY AG (X) AGE_CATEGORYQ01-AGE_CATEGORYQ11 ;
+	ARRAY DU (X) DUALQ01-DUALQ11 ;
+	ARRAY DI (X) DIEDQ01-DIEDQ11 ;
+	ARRAY QST (X) QTR_START_DATEQ01-QTR_START_DATEQ11 ;
+	ARRAY CAN (X) CANCER_TYPEQ01-CANCER_TYPEQ11 ;
+	ARRAY CC (X) COMMON_CANCER_TYPEQ01-COMMON_CANCER_TYPEQ11 ;
+	ARRAY CF (X) CANCERS1-CANCERS11 ;
 
 	%if "&vers." = "B" %then %do ;		
 		DO X = 1 TO DIM(VALZ) ;
@@ -305,8 +316,9 @@ PROC SORT DATA=CANCERS6 ; BY BENE_ID ;
 PROC SORT DATA=CANCERS7 ; BY BENE_ID ;
 PROC SORT DATA=CANCERS8 ; BY BENE_ID ;
 PROC SORT DATA=CANCERS9 ; BY BENE_ID ;
-%if "&vers." = "B" %then %do ;
 PROC SORT DATA=CANCERS10 ; BY BENE_ID ;
+%if "&vers." = "B" %then %do ;
+PROC SORT DATA=CANCERS11 ; BY BENE_ID ;
 %end ;
 DATA CANCERS ;
 	MERGE CANCERS1(IN=A WHERE = (CANCER_TYPEQ01 NE "  "))
@@ -318,11 +330,12 @@ DATA CANCERS ;
 		  CANCERS7(IN=G WHERE = (CANCER_TYPEQ07 NE "  "))  
 		  CANCERS8(IN=H WHERE = (CANCER_TYPEQ08 NE "  "))  
 		  CANCERS9(IN=I WHERE = (CANCER_TYPEQ09 NE "  "))  
+		  CANCERS10(IN=J WHERE = (CANCER_TYPEQ10 NE "  "))  
 		 %if "&vers." = "B" %then %do ;
-		  CANCERS10(IN=J WHERE = (CANCER_TYPEQ10 NE "  ")) 
+		  CANCERS11(IN=K WHERE = (CANCER_TYPEQ11 NE "  ")) 
 		 %end ;
 		 ; BY BENE_ID ;
-	IF A OR B OR C or d OR E OR F OR G OR H OR I %if "&vers." = "B" %then %do ;OR J %end ;;
+	IF A OR B OR C or d OR E OR F OR G OR H OR I OR J %if "&vers." = "B" %then %do ;OR K %end ;;
 
 data epi_combine BENES (KEEP = BENE_ID BENE_HICN FIRST_NAME LAST_NAME DOB %CQTRS) ;
 	MERGE CANCERS(IN=A)
@@ -905,7 +918,7 @@ data pde2 ;
 	proc sql ;
 		create table pde1 as
 		select a.* 
-		from in10.pde_&dsid. as a full join pde_chk AS B
+		from in11.pde_&dsid. as a full join pde_chk AS B
 		on a.bene_id=b.bene_id and a.pde_id=b.pde_id
 		WHERE B.pde_ID IS NULL ;
 	quit ;
@@ -945,7 +958,7 @@ PROC SORT DATA=&INFILE.2_CHK OUT=&INFILE.2_PERF_CHK(KEEP = BENE_ID CLM_ID) NODUP
 	proc sql ;
 		create table &infile._chk as
 		select distinct a.bene_id, a.clm_id 
-		from in10.&infile2._&dsid. as a full join &INFILE.2_PERF_CHK AS B
+		from in11.&infile2._&dsid. as a full join &INFILE.2_PERF_CHK AS B
 		on a.bene_id=b.bene_id AND A.CLM_ID = B.CLM_ID
 		WHERE B.CLM_ID IS NULL  ;
 	quit ;
@@ -965,7 +978,7 @@ PROC SORT DATA=&INFILE.2_CHK OUT=&INFILE.2_PERF_CHK(KEEP = BENE_ID CLM_ID) NODUP
 
 %MACRO LINE_PULL(infile,infile2,hdr) ;
 
-proc sort data=in10.&infile2._&dsid. out = lines ; by bene_id clm_id ;
+proc sort data=in11.&infile2._&dsid. out = lines ; by bene_id clm_id ;
 data &infile. ;
 	merge lines(in=a) &hdr._chk(in=b) ; by bene_id clm_id  ;
 	if a and b ;
@@ -1018,7 +1031,7 @@ data mbi_bene_&dsid.;
 run;
 
 data mbi_epi_&dsid.;
-	set /*epi_orig10 (keep=bene_id bene_mbi)*/
+	set epi_orig10 (keep=bene_id bene_mbi)
 		epi_orig9 (keep=bene_id bene_mbi)
 		epi_orig8 (keep=bene_id bene_mbi)
 		;
